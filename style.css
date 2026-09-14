@@ -204,7 +204,7 @@ kbd { font-family: var(--mono); font-size: 9px; letter-spacing: .04em; color: va
 html.overlay-mode, html.overlay-mode body { overflow: hidden; background: transparent !important; }
 body.overlay-mode .app-shell { display: none; }
 body.overlay-mode .halo-backdrop { display: none !important; }
-body.overlay-mode .halo { display: block; position: absolute; left: 20px; top: 20px; margin: 0; transform: scale(1); opacity: 1; transition: none; }
+body.overlay-mode .halo { display: block; position: absolute; left: 20px; top: 20px; margin: 0; transform: scale(.86); opacity: 0; }
 body.overlay-mode .halo.show { transform: scale(1); opacity: 1; }
 body.overlay-mode .halo-panel { position: absolute; left: 276px; top: 26px; }
 

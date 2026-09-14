@@ -15,7 +15,7 @@ async function harness(){
 }
 const native={hwnd:'99',pid:9,focus:'99',processName:'Weixin',editorToken:'native'};
 (async()=>{
- const h=await harness();const opened=h.api.showHalo();assert(h.windows[1].visible,"ready app must show synchronously inside hotkey callback");await tick();assert(h.windows[1].visible,'show must not wait for capture');
+ const h=await harness();const opened=h.api.showHalo();await tick();assert(h.windows[1].visible,'show must not wait for capture');
  h.captures[0].resolve({...native,processName:'chrome',editorToken:''});await opened;await tick();
  assert(h.windows[1].visible,'failed editor validation must leave menu open');h.api.hideHalo('test');
  h.captureNext();const pending=h.api.showHalo();await tick();h.api.hideHalo('escape');assert(!h.windows[1].visible,'cancel while checking');

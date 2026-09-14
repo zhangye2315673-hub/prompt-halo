@@ -7,7 +7,6 @@ const buildFiles = ['main.cjs','preload.cjs','windows-input.cjs','windows-input.
 const build = crypto.createHash('sha256').update(buildFiles.map(f => fs.readFileSync(path.join(__dirname,f))).join('')).digest('hex').slice(0,12);
 const diagnosticFile = path.join(app.getPath('userData'), 'input-diagnostics.json');
 let mainWindow, haloWindow, tray, inputService, ready;
-let startupReady=false;
 let session = null, opening = false, injecting = false, quitting = false, monitor = null;
 let diagnosticEvents = [];
 let diagnosticTimer;
@@ -76,7 +75,7 @@ async function showHalo() {
   opening=true;
   const started=performance.now();
   try {
-    if(!startupReady) await ready;
+    await ready;
     const active={id:crypto.randomUUID(),target:null,keyboard:false,phase:'checking'};
     session=active;
     const capture=inputService.request('state');
@@ -167,7 +166,6 @@ if(locked){
     ipcMain.handle('prompt-halo:open-library',()=>{hideHalo('library');mainWindow.show();});
     await Promise.all([createWindows(),inputService.ready]);createTray();
     const shortcut=globalShortcut.register('Ctrl+Alt+Q',toggleHalo);
-    startupReady=true;
     trace('ready',{shortcut,accelerator:'Ctrl+Alt+Q',helperReady:true,build});
     if(!shortcut)failure('Ctrl + Alt + Q 被其他程序占用，可从托盘呼出。');
   });
