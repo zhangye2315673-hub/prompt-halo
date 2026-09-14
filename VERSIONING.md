@@ -2,7 +2,7 @@
 
 ## 已验收输入基线
 
-`input-verified-2026-09-14` 保存用户于 2026-09-14 验收的输入实现，运行版本指纹为 `efe43e268ac6`。
+`input-baseline-efe43e268ac6` 保存用户于 2026-09-14 验收的输入实现，运行版本指纹为 `efe43e268ac6`。
 用户测试范围：两个浏览器、微信、QQ、Photoshop 文字输入、Typora，不同输入框位置均可准确写入。
 这是用户现场验收；不意味着覆盖所有应用或权限环境。
 
@@ -13,7 +13,7 @@
 保留当前工作目录，另开目录查看：
 
 ```powershell
-git worktree add --detach ../Prompt-Halo-input-verified input-verified-2026-09-14
+git worktree add --detach ../Prompt-Halo-input-verified input-baseline-efe43e268ac6
 ```
 
 进入旧版本目录后运行 `npm ci`。同一时间只运行一个桌面实例，先从托盘退出当前程序。
@@ -23,3 +23,9 @@ git worktree add --detach ../Prompt-Halo-input-verified input-verified-2026-09-1
 修改前确认 `git status`，按具体功能提交。版本通过测试后创建标签。需要撤销已推送的修改时，优先使用 `git revert <commit>` 生成可追溯的撤销提交，不强制推送覆盖历史。
 
 Git 管理的是源码。词库保存在 Electron/浏览器用户数据的 localStorage；克隆或回退源码不会自动同步个人词库，也不应删除用户数据目录。
+
+## 初次上传标签
+
+`v0.1.0` 和 `input-verified-2026-09-14` 指向初次上传版本，其中包含提速修改与 baselines 内的原始验收快照。直接运行提速前的验收实现，请使用 `input-baseline-efe43e268ac6`；两个标签的含义不同。
+
+当前提速改动仅通过语法和菜单生命周期测试；长时间闲置的秒级延迟尚未确认完全消除。
