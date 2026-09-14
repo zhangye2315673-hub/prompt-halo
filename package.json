@@ -1,0 +1,16 @@
+{
+  "name": "prompt-halo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "npx serve .",
+    "desktop": "electron electron/main.cjs",
+    "install:desktop": "npm install --save-dev electron",
+    "test:regression": "electron electron/regression.cjs",
+    "test:native": "electron electron/native-regression.cjs",
+    "test:chrome": "electron electron/native-regression.cjs --chrome"
+  },
+  "devDependencies": {
+    "electron": "^44.3.0"
+  }
+}
