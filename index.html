@@ -2,99 +2,28 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prompt Halo · 提示词工作台</title>
-  <meta name="description" content="快速保存、分类与注入常用提示词的桌面常驻工作台" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prompt Halo</title>
   <link rel="stylesheet" href="style.css" />
-  <script>if(location.hash==="#overlay")document.documentElement.classList.add("overlay-mode");</script>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand-lockup">
-        <div class="brand-mark"><span></span><span></span><span></span></div>
-        <div>
-          <div class="brand-name">Prompt Halo</div>
-          <div class="brand-subtitle">Prompt workspace / v0.1</div>
-        </div>
-      </div>
-      <div class="topbar-actions">
-        <div class="sync-status"><i></i>本地已保存</div>
-        <button class="halo-launcher" id="haloLauncher">试用菜单</button><button class="icon-button" id="settingsBtn" aria-label="设置">···</button>
-        <div class="avatar">LY</div>
-      </div>
-    </header>
-
-    <main class="workspace">
-      <aside class="sidebar">
-        <div class="sidebar-intro">
-          <span class="eyebrow">COMMAND CENTER</span>
-          <h1>把灵感变成<br><em>一次点击。</em></h1>
-          <p>常用提示词、风格后缀和工作流，集中在一个随时可呼出的圆环里。</p>
-        </div>
-        <button class="new-prompt-button" id="newPromptBtn"><span>＋</span> 新建提示词 <kbd>CTRL N</kbd></button>
-        <nav class="category-nav" id="categoryNav"></nav>
-        <div class="sidebar-footer">
-          <div class="shortcut-card">
-            <div class="shortcut-card-head"><span>快速呼出</span><kbd>ALT</kbd><b>+</b><kbd>Q</kbd></div>
-            <p>按 Ctrl + Alt + Q 呼出 Halo，点击分类和提示词即可插入；Space 轨迹选择作为可选快捷方式。</p>
-          </div>
-          <div class="storage-note"><span class="storage-dot"></span> 数据仅保存在此设备</div>
-        </div>
-      </aside>
-
-      <section class="prompt-library">
-        <div class="library-header">
-          <div>
-            <div class="section-kicker">LIBRARY / <span id="promptCount">06</span> PROMPTS</div>
-            <h2 id="libraryTitle">全部提示词</h2>
-          </div>
-          <div class="header-tools">
-            <label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="搜索提示词、标签…" /><kbd>CTRL K</kbd></label>
-            <button class="filter-button" id="sortBtn">最近使用 <span>↕</span></button>
-          </div>
-        </div>
-        <div class="active-filter" id="activeFilter" hidden><span></span> 当前分类：<b></b><button>×</button></div>
-        <div class="prompt-grid" id="promptGrid"></div>
-        <div class="library-footer"><span id="resultHint">显示全部提示词</span><span>双击卡片快速编辑</span></div>
-      </section>
-
-      <aside class="editor-panel">
-        <div class="editor-head"><div><span class="section-kicker">PROMPT INSPECTOR</span><h2 id="editorMode">编辑提示词</h2></div><button class="close-editor" id="closeEditorBtn">×</button></div>
-        <div class="editor-content">
-          <div class="field-block"><label for="titleInput">名称</label><input id="titleInput" /></div>
-          <div class="field-block"><div class="label-row"><label for="contentInput">提示词正文</label><span id="charCount">0 chars</span></div><textarea id="contentInput" rows="9"></textarea><div class="field-helper">支持变量：<span>{subject}</span> <span>{style}</span> <span>{mood}</span></div></div>
-          <div class="field-block"><label>分类</label><div class="select-like" id="categorySelect">图像编辑 <span>⌄</span></div></div>
-          <div class="field-block"><label>快捷后缀</label><div class="suffix-stack" id="suffixStack"></div><button class="add-suffix" id="addSuffixBtn">＋ 添加常用后缀</button></div>
-          <div class="editor-options"><label class="toggle-row"><span><b>自动追加后缀</b><small>插入时自动拼接下方内容</small></span><input id="suffixToggle" type="checkbox" checked /><i></i></label><label class="toggle-row"><span><b>收藏提示词</b><small>在圆环中心优先显示</small></span><input id="favoriteToggle" type="checkbox" /><i></i></label></div>
-          <div class="editor-actions"><button class="ghost-button" id="duplicateBtn">复制一份</button><button class="primary-button" id="savePromptBtn">保存更改 <span>↗</span></button></div>
-        </div>
-        <div class="injection-demo"><div class="demo-head"><span class="pulse-dot"></span><span>注入目标</span><b>演示模式</b></div><div class="demo-input-wrap"><textarea id="demoInput" rows="3" placeholder="先在这里放置光标，再点“试用菜单”…"></textarea><span class="demo-cursor"></span></div><p>这里仅用于试用。跨应用输入请在目标文本框内按 Ctrl + Alt + Q。</p></div>
-      </aside>
-    </main>
-  </div>
-
-  <div class="halo-backdrop" id="haloBackdrop"></div>
-  <div class="halo" id="halo" aria-hidden="true">
-    <div class="halo-orbit orbit-one"></div><div class="halo-orbit orbit-two"></div>
-    <button class="halo-center" id="haloCenter" aria-label="关闭菜单"><div class="center-icon">×</div><span>HALO</span><small id="lastUsedLabel">关闭菜单</small></button>
-    <button class="halo-action action-top" data-action="recent"><span class="halo-icon">↺</span><b>最近使用</b><small>R</small></button>
-    <button class="halo-action action-right" data-action="category"><span class="halo-icon">◈</span><b>分类</b><small>C</small></button>
-    <button class="halo-action action-bottom" data-action="search"><span class="halo-icon">⌕</span><b>搜索</b><small>K</small></button>
-    <button class="halo-action action-left" data-action="favorite"><span class="halo-icon">☆</span><b>收藏</b><small>F</small></button>
-    <div class="halo-label"><span id="haloHint">点击分类，再点击提示词；Esc 取消</span><br><kbd>ESC</kbd> 取消</div>
-  </div>
-  <div class="halo-panel" id="haloPanel"></div>
-
-  <div class="toast" id="toast"><span class="toast-icon">✓</span><div><b id="toastTitle">已插入提示词</b><small id="toastBody">内容已写入当前输入框</small></div><button id="toastUndo">撤销</button></div>
-  <div class="modal" id="settingsModal" hidden><div class="modal-card"><button class="modal-close" id="modalClose">×</button><span class="section-kicker">PREFERENCES</span><h2>工作台设置</h2><p>这里会连接到桌面版的系统级快捷键、剪贴板和输入注入能力。</p><div class="setting-row"><span>呼出快捷键</span><kbd>ALT + Q</kbd></div><div class="setting-row"><span>插入策略</span><b>点选后自动输入</b></div><div class="setting-row"><span>后缀分隔</span><b>换行</b></div><button class="primary-button" id="modalDone">完成</button></div></div>
-
+  <main id="halo" class="halo" aria-label="提示词圆环" aria-hidden="true">
+    <ray-menu id="outerRayMenu" class="outer-ray-menu" variant="slice" edge-behavior="shift" radius="250" inner-radius="146" center-deadzone="34" start-angle="-90" sweep-angle="360" aria-label="外圈提示词"></ray-menu>
+    <ray-menu id="rayMenu" variant="slice" edge-behavior="shift" radius="144" inner-radius="40" center-deadzone="34" start-angle="-90" sweep-angle="360" aria-label="提示词菜单"></ray-menu>
+    <div class="center-split" aria-label="中心控制">
+      <button id="centerAdd" class="center-half center-add" type="button" aria-label="新增提示词" title="新增提示词">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><path class="center-slot" d="M 23.108106 1.260218 A 32 32 0 0 0 23.108106 62.739782 Q 28 63.749016 28 58.749016 L 28 5.250984 Q 28 0.250984 23.108106 1.260218 Z"/></svg><svg class="center-glyph" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>
+      </button>
+      <button id="outerToggle" class="center-half center-toggle" type="button" aria-label="开启外圈" aria-pressed="false" title="外圈开关">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><path class="center-slot" d="M 40.891894 1.260218 A 32 32 0 0 1 40.891894 62.739782 Q 36 63.749016 36 58.749016 L 36 5.250984 Q 36 0.250984 40.891894 1.260218 Z"/></svg><svg class="center-glyph" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5"/><circle cx="8" cy="8" r="1.2"/></svg>
+      </button>
+    </div>
+    <section id="haloPanel" class="halo-panel" aria-label="提示词菜单"></section>
+    <button id="slotEdit" class="slot-edit" type="button" aria-label="编辑提示词" title="编辑提示词" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10.5 2.5 3 3M3 10l7.8-7.8a1.4 1.4 0 0 1 2 2L5 12l-3 1z"/></svg></button>
+    <section id="promptEditor" class="prompt-editor" aria-label="编辑提示词" hidden></section>
+    <div id="haloHint" class="error-notice" role="status" hidden></div>
+  </main>
   <script src="app.js"></script>
+  <script type="module" src="./node_modules/ray-menu/dist/wc/ray-menu.mjs"></script>
 </body>
 </html>
-
-
-

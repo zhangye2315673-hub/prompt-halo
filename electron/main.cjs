@@ -6,7 +6,7 @@ const { WindowsInput } = require('./windows-input.cjs');
 const buildFiles = ['main.cjs','preload.cjs','windows-input.cjs','windows-input.cs','windows-input.ps1','../app.js','../style.css'];
 const build = crypto.createHash('sha256').update(buildFiles.map(f => fs.readFileSync(path.join(__dirname,f))).join('')).digest('hex').slice(0,12);
 const diagnosticFile = path.join(app.getPath('userData'), 'input-diagnostics.json');
-let mainWindow, haloWindow, tray, inputService, ready;
+let haloWindow, tray, inputService, ready, devWatcher, devReloadTimer;
 let startupReady=false;
 let session = null, opening = false, injecting = false, quitting = false, monitor = null;
 let diagnosticEvents = [];
@@ -40,15 +40,27 @@ function createTrayIcon() {
 
 function createWindows() {
   const webPreferences = {preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,backgroundThrottling:false};
-  mainWindow = new BrowserWindow({width:1440,height:900,minWidth:980,minHeight:680,show:false,backgroundColor:'#0d1014',autoHideMenuBar:true,webPreferences});
-  haloWindow = new BrowserWindow({width:560,height:360,transparent:true,frame:false,resizable:false,movable:false,alwaysOnTop:true,skipTaskbar:true,hasShadow:false,show:false,backgroundColor:'#00000000',focusable:true,webPreferences});
-  mainWindow.on('close',e=>{if(!quitting){e.preventDefault();mainWindow.hide();}});
-  haloWindow.on('blur',()=>{if(session?.keyboard && !injecting) hideHalo('blur');});
-  return Promise.all([mainWindow.loadFile(path.join(__dirname,'../index.html')),haloWindow.loadFile(path.join(__dirname,'../index.html'),{hash:'overlay'})]);
+  haloWindow = new BrowserWindow({width:860,height:600,transparent:true,frame:false,resizable:false,movable:false,alwaysOnTop:true,skipTaskbar:true,hasShadow:false,show:false,backgroundColor:'#00000000',focusable:true,webPreferences});
+  haloWindow.on('close',e=>{if(!quitting){e.preventDefault();hideHalo('close');}});
+  // Screenshot overlays temporarily take focus. Blur alone is not dismissal;
+  // explicit close/outside-click and the accepted paste ownership checks remain.
+  haloWindow.on('blur',()=>{if(session && !injecting)trace('blur-retained');});
+  haloWindow.webContents.on?.('did-finish-load',()=>{
+    if(session)haloWindow.webContents.send('prompt-halo:show',{sessionId:session.id,phase:session.phase,build});
+  });
+  return haloWindow.loadFile(path.join(__dirname,'../index.html'),{hash:'overlay'});
+}
+function watchDevFiles(){
+  if(process.env?.NODE_ENV==='production')return;
+  const root=path.join(__dirname,'..');
+  devWatcher=fs.watch(root,{persistent:false},(_,file)=>{
+    if(!file || !/^(app|style|index)\.((js|css|html))$/.test(String(file)) || injecting)return;
+    clearTimeout(devReloadTimer);devReloadTimer=setTimeout(()=>{if(!haloWindow?.isDestroyed())haloWindow.webContents.reloadIgnoringCache();},120);
+  });
 }
 function positionHalo() {
   const point=screen.getCursorScreenPoint(), b=screen.getDisplayNearestPoint(point).workArea;
-  haloWindow.setPosition(Math.round(Math.max(b.x,Math.min(point.x-140,b.x+b.width-560))),Math.round(Math.max(b.y,Math.min(point.y-140,b.y+b.height-360))));
+  haloWindow.setPosition(Math.round(Math.max(b.x,Math.min(point.x-430,b.x+b.width-860))),Math.round(Math.max(b.y,Math.min(point.y-300,b.y+b.height-600))));
 }
 function stopMonitor(){clearTimeout(monitor);monitor=null;}
 function pollOutside() {
@@ -71,8 +83,21 @@ function updateTarget(active, phase, reason='') {
   active.phase=phase;active.reason=reason;
   haloWindow.webContents.send('prompt-halo:target',{sessionId:active.id,phase,reason,processName:active.target?.processName||''});
 }
+function raiseHalo() {
+  if(haloWindow.isMinimized())haloWindow.restore();
+  haloWindow.setAlwaysOnTop(true,'screen-saver');
+  haloWindow.showInactive();
+  // Showing an already-visible window does not repair its native z-order.
+  haloWindow.moveTop();
+}
 async function showHalo() {
-  if(opening || injecting || session)return;
+  if(opening || injecting)return;
+  if(session){
+    // An explicit summon also repairs a hidden/minimized window, preserving the
+    // captured target and unsaved editor instead of treating it as toggle-close.
+    raiseHalo();
+    trace('reshown');return;
+  }
   opening=true;
   const started=performance.now();
   try {
@@ -82,7 +107,7 @@ async function showHalo() {
     const capture=inputService.request('state');
     positionHalo();
     haloWindow.webContents.send('prompt-halo:show',{sessionId:active.id,phase:'checking',build});
-    haloWindow.showInactive();
+    raiseHalo();
     globalShortcut.register('Escape',()=>hideHalo('escape'));
     trace('opened',{nonactivating:true,showRequestedMs:Math.round(performance.now()-started)});
     // No menu lifetime or cancellation depends on the accessibility request.
@@ -90,7 +115,7 @@ async function showHalo() {
       if(session!==active)return;
       active.target=target;
       trace('target-captured',{hwnd:target.hwnd,pid:target.pid,focus:target.focus,processName:target.processName,editorConfirmed:!!target.editorToken,sessionId:active.id,captureMs:Math.round(performance.now()-started)});
-      const valid=target.hwnd!=='0' && target.hwnd!==handle(mainWindow) && target.hwnd!==handle(haloWindow);
+      const valid=target.hwnd!=='0' && target.hwnd!==handle(haloWindow);
       updateTarget(active,valid?'ready':'blocked',valid?'':'未确认网页输入框：可以浏览词库；请关闭后点击聊天框再呼出。');
       pollOutside();
     },error=>{
@@ -108,7 +133,7 @@ function hideVisuals() {
 function hideHalo(reason='cancel') {
   trace('closed',{reason});session=null;hideVisuals();
 }
-async function toggleHalo(){if(session||haloWindow?.isVisible?.())hideHalo('toggle');else await showHalo();}
+async function toggleHalo(){if(haloWindow?.isVisible?.()&&!haloWindow?.isMinimized?.())hideHalo('toggle');else await showHalo();}
 async function acquireKeyboard() {
   const active=session;
   if(!active)return {ok:false,reason:'菜单已关闭'};
@@ -148,7 +173,7 @@ async function pasteIntoPreviousApp(text, sessionId) {
 function createTray() {
   tray=new Tray(createTrayIcon());tray.setToolTip('Prompt Halo · '+build);
   tray.setContextMenu(Menu.buildFromTemplate([
-    {label:'显示提示词库',click:()=>{hideHalo('library');mainWindow.show();}},
+    {label:'打开圆环 · 分类中可新增提示词',click:showHalo},
     {label:'呼出 Halo',click:showHalo},
     {label:'打开输入诊断',click:()=>shell.openPath(diagnosticFile)},
     {label:'版本 '+build,enabled:false},
@@ -164,17 +189,17 @@ if(locked){
     ipcMain.handle('prompt-halo:hide-overlay',()=>hideHalo());
     ipcMain.handle('prompt-halo:keyboard',acquireKeyboard);
     ipcMain.handle('prompt-halo:diagnostics',()=>({build,pid:process.pid,path:diagnosticFile,events:diagnosticEvents}));
-    ipcMain.handle('prompt-halo:open-library',()=>{hideHalo('library');mainWindow.show();});
-    await Promise.all([createWindows(),inputService.ready]);createTray();
+
+    await Promise.all([createWindows(),inputService.ready]);watchDevFiles();createTray();
     const shortcut=globalShortcut.register('Ctrl+Alt+Q',toggleHalo);
     startupReady=true;
     trace('ready',{shortcut,accelerator:'Ctrl+Alt+Q',helperReady:true,build});
     if(!shortcut)failure('Ctrl + Alt + Q 被其他程序占用，可从托盘呼出。');
   });
   ready.catch(e=>{console.error('Halo startup failed:',e.message);app.exit(1);});
-  app.on('second-instance',()=>{mainWindow?.show();});
+  app.on('second-instance',()=>{showHalo();});
 }
-app.on('before-quit',()=>{quitting=true;stopMonitor();});
+app.on('before-quit',()=>{quitting=true;stopMonitor();devWatcher?.close();clearTimeout(devReloadTimer);});
 app.on('will-quit',()=>{globalShortcut.unregisterAll();inputService?.stop();});
 app.on('window-all-closed',()=>{});
 module.exports={showHalo,hideHalo,toggleHalo,pasteIntoPreviousApp,getForegroundState:()=>inputService?.request('state'),getDiagnostics:()=>diagnosticEvents};

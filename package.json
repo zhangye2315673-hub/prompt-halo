@@ -8,9 +8,17 @@
     "install:desktop": "npm install --save-dev electron",
     "test:regression": "electron electron/regression.cjs",
     "test:native": "electron electron/native-regression.cjs",
-    "test:chrome": "electron electron/native-regression.cjs --chrome"
+    "test:chrome": "electron electron/native-regression.cjs --chrome",
+    "test:input-contract": "node tests/accepted-input-contract.cjs",
+    "test:menu": "node tests/menu-lifecycle.cjs",
+    "test:window-visibility": "electron tests/window-visibility.cjs",
+    "test:ring-controls": "electron tests/ring-controls.cjs",
+    "test:ui": "electron tests/renderer-menu.cjs"
   },
   "devDependencies": {
     "electron": "^44.3.0"
+  },
+  "dependencies": {
+    "ray-menu": "^0.1.6"
   }
 }

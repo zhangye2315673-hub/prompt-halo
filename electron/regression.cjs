@@ -10,7 +10,7 @@ async function wait(ms = 50) { return new Promise(resolve => setTimeout(resolve,
 async function until(check, timeout = 6000) { const end = Date.now() + timeout; while (!(await check())) { if (Date.now() > end) fail('Timed out'); await wait(30); } }
 async function main() {
   await app.whenReady();
-  await until(() => BrowserWindow.getAllWindows().length === 2);
+  await until(() => BrowserWindow.getAllWindows().length === 1);
   const haloWindows = BrowserWindow.getAllWindows();
   await until(() => haloWindows.every(w => !w.webContents.isLoading()));
   const overlay = haloWindows.find(w => w.getSize()[0] === 560);

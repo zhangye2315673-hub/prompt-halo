@@ -15,7 +15,7 @@ async function until(check, message, timeout=6000){const end=Date.now()+timeout;
 const driver=(...args)=>run('powershell.exe',['-NoProfile','-NonInteractive','-File',path.join(__dirname,'../tests/native-driver.ps1'),...args],{windowsHide:true});
 async function test(){
  await app.whenReady();
- await until(()=>BrowserWindow.getAllWindows().length===2,'windows');
+ await until(()=>BrowserWindow.getAllWindows().length===1,'windows');
  const windows=BrowserWindow.getAllWindows();
  await until(()=>windows.every(w=>!w.webContents.isLoading()),'load');
  const overlay=windows.find(w=>w.webContents.getURL().endsWith('#overlay'));
