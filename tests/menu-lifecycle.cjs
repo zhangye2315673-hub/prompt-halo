@@ -14,12 +14,16 @@ async function harness(){
  return {api:context.module.exports,windows,captures,calls,handlers,ipcHandlers,captureNext(){capturing=true;},setForeground(value){current=value;}};
 }
 const native={hwnd:'99',pid:9,focus:'99',processName:'Weixin',editorToken:'native'};
+const lastDismissal=h=>h.windows[0].events.filter(e=>e[0]==='prompt-halo:dismiss').at(-1)[1].id;
+const finishExit=(h,id=lastDismissal(h))=>h.ipcHandlers.get('prompt-halo:dismissed')({sender:h.windows[0].webContents},id);
 (async()=>{
  const h=await harness();const opened=h.api.showHalo();assert(h.windows[0].visible,"ready app must show synchronously inside hotkey callback");await tick();assert(h.windows[0].visible,'show must not wait for capture');
  h.captures[0].resolve({...native,processName:'chrome',editorToken:''});await opened;await tick();
  assert(h.windows[0].visible,'failed editor validation must leave menu open');h.api.hideHalo('test');
- h.captureNext();const pending=h.api.showHalo();await tick();h.api.hideHalo('escape');assert(!h.windows[0].visible,'cancel while checking');
+ h.captureNext();const pending=h.api.showHalo();await tick();h.api.hideHalo('escape');assert(h.windows[0].visible,'cancel keeps visual window until animation ends');
+ const staleDismissal=lastDismissal(h);
  h.captureNext();const reopened=h.api.showHalo();await tick();assert(h.windows[0].visible,'reopen must not wait for stale capture');
+ finishExit(h,staleDismissal);assert(h.windows[0].visible,'old exit completion cannot hide a reopened session');
  h.captures[1].resolve({...native,editorToken:''});await pending;await tick();assert(h.windows[0].visible,'stale result cannot close new session');
  h.captures[2].resolve(native);await reopened;await tick();
  const id=h.windows[0].events.filter(e=>e[0]==='prompt-halo:show').at(-1)[1].sessionId;
@@ -43,7 +47,9 @@ const native={hwnd:'99',pid:9,focus:'99',processName:'Weixin',editorToken:'nativ
  window.minimized=true;await captureCase.api.toggleHalo();assert(window.visible&&!window.minimized,'hotkey recovers minimized menu in one press');
  assert.equal(window.events.length,beforeEvents,'recover preserves editor and renderer state');
  assert.equal(captureCase.calls.length,beforeCalls,'recover never recaptures target');
- await captureCase.api.toggleHalo();assert(!window.visible,'visible menu still toggles closed');
+ const closed=captureCase.api.toggleHalo();assert(window.visible,'native toggle waits for rendered exit');
+ await captureCase.ipcHandlers.get('prompt-halo:dismissed')({sender:{}},lastDismissal(captureCase));assert(window.visible,'foreign renderer cannot complete dismissal');
+ finishExit(captureCase);await closed;assert(!window.visible,'visible menu hides once renderer finishes');
  captureCase.api.hideHalo('test-end');
  console.log('PASS: menu focus restores target; unrelated foreground rejected;  immediate display, blocked target remains open, cancel, reopen, stale capture, native selection, duplicate prevention, service failure; screenshot blur retention; hidden/minimized recovery');
 })().catch(e=>{console.error(e);process.exitCode=1;});

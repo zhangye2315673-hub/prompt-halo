@@ -2,13 +2,15 @@ const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, screen, Tray, Me
 const path = require('node:path');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
-const { WindowsInput } = require('./windows-input.cjs');
+const inputModulePath=app.isPackaged?path.join(process.resourcesPath,'app.asar.unpacked','electron','windows-input.cjs'):path.join(__dirname,'windows-input.cjs');
+const { WindowsInput } = require(inputModulePath);
 const buildFiles = ['main.cjs','preload.cjs','windows-input.cjs','windows-input.cs','windows-input.ps1','../app.js','../style.css'];
 const build = crypto.createHash('sha256').update(buildFiles.map(f => fs.readFileSync(path.join(__dirname,f))).join('')).digest('hex').slice(0,12);
 const diagnosticFile = path.join(app.getPath('userData'), 'input-diagnostics.json');
-let haloWindow, tray, inputService, ready, devWatcher, devReloadTimer;
+let haloWindow, tray, inputService, ready, devWatcher, devReloadTimer, devReloadCheckTimer;
 let startupReady=false;
 let session = null, opening = false, injecting = false, quitting = false, monitor = null;
+let dismissal=null,dismissSequence=0;
 let diagnosticEvents = [];
 let diagnosticTimer;
 const handle = win => win?.getNativeWindowHandle().readBigUInt64LE().toString();
@@ -51,11 +53,22 @@ function createWindows() {
   return haloWindow.loadFile(path.join(__dirname,'../index.html'),{hash:'overlay'});
 }
 function watchDevFiles(){
-  if(process.env?.NODE_ENV==='production')return;
+  if(app.isPackaged || process.env?.NODE_ENV==='production')return;
   const root=path.join(__dirname,'..');
+  const watched=/^(app|style|index)\.(js|css|html)$/;
+  const stableFiles=()=>['app.js','style.css','index.html'].map(name=>{try{const stat=fs.statSync(path.join(root,name));return name+':'+stat.size+':'+stat.mtimeMs;}catch{return name+':missing';}}).join('|');
+  let lastSignature='';
+  const reloadWhenStable=()=>{
+    const signature=stableFiles();
+    if(signature!==lastSignature){lastSignature=signature;clearTimeout(devReloadCheckTimer);devReloadCheckTimer=setTimeout(reloadWhenStable,180);return;}
+    devReloadCheckTimer=null;
+    if(injecting||haloWindow?.isDestroyed())return;
+    trace('dev-reload',{signature});
+    haloWindow.webContents.reloadIgnoringCache();
+  };
   devWatcher=fs.watch(root,{persistent:false},(_,file)=>{
-    if(!file || !/^(app|style|index)\.((js|css|html))$/.test(String(file)) || injecting)return;
-    clearTimeout(devReloadTimer);devReloadTimer=setTimeout(()=>{if(!haloWindow?.isDestroyed())haloWindow.webContents.reloadIgnoringCache();},120);
+    if(!file || !watched.test(String(file)))return;
+    clearTimeout(devReloadTimer);devReloadTimer=setTimeout(()=>{lastSignature='';reloadWhenStable();},420);
   });
 }
 function positionHalo() {
@@ -92,6 +105,7 @@ function raiseHalo() {
 }
 async function showHalo() {
   if(opening || injecting)return;
+  cancelDismissal();
   if(session){
     // An explicit summon also repairs a hidden/minimized window, preserving the
     // captured target and unsaved editor instead of treating it as toggle-close.
@@ -130,10 +144,27 @@ function hideVisuals() {
   haloWindow?.hide();haloWindow?.webContents.send('prompt-halo:hide');
   haloWindow?.setFocusable(true);
 }
-function hideHalo(reason='cancel') {
-  trace('closed',{reason});session=null;hideVisuals();
+function cancelDismissal(){
+  if(!dismissal)return;
+  const pending=dismissal;dismissal=null;clearTimeout(pending.timer);pending.resolve();
 }
-async function toggleHalo(){if(haloWindow?.isVisible?.()&&!haloWindow?.isMinimized?.())hideHalo('toggle');else await showHalo();}
+function finishDismissal(id){
+  if(dismissal?.id!==id)return;
+  const pending=dismissal;dismissal=null;clearTimeout(pending.timer);hideVisuals();pending.resolve();
+}
+function hideHalo(reason='cancel') {
+  if(dismissal)return dismissal.promise;
+  trace('closed',{reason});session=null;stopMonitor();globalShortcut.unregister('Escape');
+  if(!haloWindow?.isVisible?.()||haloWindow?.isMinimized?.()){hideVisuals();return Promise.resolve();}
+  const pending={id:++dismissSequence};pending.promise=new Promise(resolve=>{pending.resolve=resolve;});
+  dismissal=pending;
+  // Cancellation waits for the rendered exit. The accepted paste path still
+  // calls hideVisuals synchronously before its final native focus check.
+  pending.timer=setTimeout(()=>finishDismissal(pending.id),1000);
+  haloWindow.webContents.send('prompt-halo:dismiss',{id:pending.id});
+  return pending.promise;
+}
+async function toggleHalo(){if(dismissal)return showHalo();if(haloWindow?.isVisible?.()&&!haloWindow?.isMinimized?.())return hideHalo('toggle');else await showHalo();}
 async function acquireKeyboard() {
   const active=session;
   if(!active)return {ok:false,reason:'菜单已关闭'};
@@ -187,6 +218,7 @@ if(locked){
     ipcMain.handle('prompt-halo:insert',(e,text,id)=>e.sender===haloWindow?.webContents?pasteIntoPreviousApp(text,id):{ok:false,reason:'请从目标应用中呼出菜单'});
     ipcMain.handle('prompt-halo:toggle',toggleHalo);
     ipcMain.handle('prompt-halo:hide-overlay',()=>hideHalo());
+    ipcMain.handle('prompt-halo:dismissed',(e,id)=>{if(e.sender===haloWindow?.webContents)finishDismissal(id);});
     ipcMain.handle('prompt-halo:keyboard',acquireKeyboard);
     ipcMain.handle('prompt-halo:diagnostics',()=>({build,pid:process.pid,path:diagnosticFile,events:diagnosticEvents}));
 
@@ -195,11 +227,13 @@ if(locked){
     startupReady=true;
     trace('ready',{shortcut,accelerator:'Ctrl+Alt+Q',helperReady:true,build});
     if(!shortcut)failure('Ctrl + Alt + Q 被其他程序占用，可从托盘呼出。');
+    // 双击 EXE 后自动展示一次圆环，给出明确的启动反馈。
+    setTimeout(()=>{if(!quitting)showHalo();},420);
   });
   ready.catch(e=>{console.error('Halo startup failed:',e.message);app.exit(1);});
   app.on('second-instance',()=>{showHalo();});
 }
-app.on('before-quit',()=>{quitting=true;stopMonitor();devWatcher?.close();clearTimeout(devReloadTimer);});
+app.on('before-quit',()=>{quitting=true;cancelDismissal();stopMonitor();devWatcher?.close();clearTimeout(devReloadTimer);clearTimeout(devReloadCheckTimer);});
 app.on('will-quit',()=>{globalShortcut.unregisterAll();inputService?.stop();});
 app.on('window-all-closed',()=>{});
 module.exports={showHalo,hideHalo,toggleHalo,pasteIntoPreviousApp,getForegroundState:()=>inputService?.request('state'),getDiagnostics:()=>diagnosticEvents};

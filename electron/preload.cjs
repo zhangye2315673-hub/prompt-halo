@@ -8,5 +8,7 @@ contextBridge.exposeInMainWorld('promptHalo',{
   diagnostics:()=>ipcRenderer.invoke('prompt-halo:diagnostics'),
   onOverlayShow:handler=>subscribe('prompt-halo:show',handler),
   onTargetState:handler=>subscribe('prompt-halo:target',handler),
-  onOverlayHide:handler=>subscribe('prompt-halo:hide',handler)
+  onOverlayHide:handler=>subscribe('prompt-halo:hide',handler),
+  onOverlayDismiss:handler=>subscribe('prompt-halo:dismiss',handler),
+  completeDismissal:id=>ipcRenderer.invoke('prompt-halo:dismissed',id)
 });
