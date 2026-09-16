@@ -1,6 +1,6 @@
 {
   "name": "prompt-halo",
-  "version": "0.2.0-beta.2",
+  "version": "0.2.0-beta.3",
   "private": true,
   "scripts": {
     "start": "npx serve .",
@@ -19,7 +19,7 @@
     "test:legacy:renderer": "electron tests/renderer-menu.cjs",
     "test:legacy:ring-controls": "electron tests/ring-controls.cjs",
     "test:center": "electron tests/center-controls.cjs",
-    "build:release": "node scripts/build-info.cjs && electron-builder --win nsis --x64 && node scripts/build-info.cjs --verify"
+    "build:release": "node scripts/build-info.cjs && electron-builder --win nsis --x64 --publish never && node scripts/build-info.cjs --verify"
   },
   "devDependencies": {
     "electron": "^44.3.0",
