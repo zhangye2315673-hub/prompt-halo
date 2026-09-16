@@ -31,6 +31,8 @@ jobs:
         run: npm run build:release
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Install Electron test runtime
+        run: node node_modules/electron/install.js
       - name: Verify packaged renderer
         shell: pwsh
         run: |

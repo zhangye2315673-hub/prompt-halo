@@ -1,4 +1,4 @@
-# QEA CueRing｜词环 0.2.0-beta.3
+# QEA CueRing｜词环 0.2.0-beta.4
 
 日期：2026-09-16。预发布测试版，Windows x64。
 
