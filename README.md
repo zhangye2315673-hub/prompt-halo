@@ -1,113 +1,117 @@
-# QEA CueRing｜词环
+<p align="center">
+  <img src="assets/cue-ring.png" width="96" height="96" alt="QEA CueRing icon">
+</p>
 
-**把常用提示词，放到鼠标身边。**  
-**Your everyday prompts, one shortcut away.**
+<h1 align="center">QEA CueRing｜词环</h1>
+<p align="center"><b>把常用提示词，放到鼠标身边。</b><br>Your everyday prompts, one shortcut away.</p>
+<p align="center">
+  <a href="#下载与使用">下载与使用</a> ·
+  <a href="#english">English</a> ·
+  <a href="https://github.com/zhangye2315673-hub/prompt-halo/releases">Releases</a> ·
+  <a href="https://github.com/zhangye2315673-hub/prompt-halo/issues">反馈 / Feedback</a>
+</p>
 
-为游戏原画与视觉创作工作流设计的 Windows 桌面提示词圆环。按 **Ctrl + Alt + Q** 呼出，选择提示词，写入原来的输入框。
+为游戏原画与视觉创作设计的 Windows 提示词圆环。把转风格、局部修改、补齐画面等常用提示词收进圆环，在输入框中按 **Ctrl + Alt + Q**，点击即可调用。
 
-A Windows radial prompt menu for game concept art and visual creation. Press **Ctrl + Alt + Q**, choose a prompt, and insert it into the input field you were using.
+A Windows radial prompt menu for game concept art and visual creation. Keep reusable instructions for restyling, local edits, and image completion within reach. Focus an input field, press **Ctrl + Alt + Q**, and choose a prompt.
 
-[中文说明](#中文说明) · [English](#english) · [下载 / Downloads](https://github.com/zhangye2315673-hub/prompt-halo/releases)
+<p align="center">
+  <img src="docs/images/cue-ring-preview.png" width="640" alt="词环实际界面：六个提示词扇区、中心操作按钮与绿色悬停反馈 / Actual CueRing interface with six prompt sectors and green hover feedback">
+</p>
+<p align="center"><sub>实际应用界面 · Actual application screenshot</sub></p>
 
-## 界面预览 · Preview
+## 下载与使用
 
-![QEA CueRing 词环：六个提示词扇区、中心操作按钮与绿色悬停反馈 / Six prompt sectors, center controls, and green hover feedback](docs/images/cue-ring-preview.png)
+**普通用户直接下载应用，无需使用 CMD 或安装开发环境。**
 
-实际界面截图：深灰紫底色、亮绿选中反馈，常用操作集中在圆环内。  
-Actual application screenshot: charcoal-purple sectors, bright green hover feedback, and controls within the ring.
+前往 **[Releases 下载页面](https://github.com/zhangye2315673-hub/prompt-halo/releases)**，展开版本下的 **Assets**：
 
-## 中文说明
+| 选择 | 文件结尾 | 怎么打开 |
+| --- | --- | --- |
+| **安装版 · 推荐** | `windows-x64-setup.exe` | 安装一次，从桌面或开始菜单打开。 |
+| **免安装版** | `windows-x64.zip` | 完整解压一次，双击 `QEA CueRing.exe`。 |
 
-### 能做什么
+免安装版请保留整个文件夹。GitHub 自动生成的 **Source code** 压缩包是源码，不是可直接运行的应用。
 
-- **快捷调用**：在目标输入框放置光标，按快捷键呼出圆环，点击扇区调用提示词。
-- **集中编辑**：点击中心的笔，再选择扇区，编辑对应内容。
-- **扩展词库**：通过中心按钮新增提示词、切换外圈。
-- **本地保存**：提示词保存在本机，支持导入、导出和历史备份恢复。
-- **减少误操作**：编辑未保存时提供确认；调用时保留目标窗口与焦点校验。
+### 三步调用
 
-### 下载与启动
+1. **定位**：把光标放进目标输入框。
+2. **呼出**：按 **Ctrl + Alt + Q**。
+3. **选择**：点击扇区，提示词写入原输入框。按 **Esc** 可关闭圆环。
 
-前往 **[GitHub Releases](https://github.com/zhangye2315673-hub/prompt-halo/releases)**，在附件中选择：
+### 在圆环里管理提示词
 
-| 下载文件 | 使用方式 |
+| 操作 | 用法 |
 | --- | --- |
-| `QEA-CueRing-…-windows-x64-setup.exe` | 安装一次，以后从桌面或开始菜单打开。 |
-| `QEA-CueRing-…-windows-x64.zip` | 完整解压一次，双击文件夹内的 `QEA CueRing.exe`。 |
+| 新增 | 点击中心 **＋**，填写标题和正文。 |
+| 编辑 | 点击中心 **笔图标**，再选择要编辑的扇区。 |
+| 展开 | 点击中心 **外圈按钮**，切换更多提示词位置。 |
+| 备份与迁移 | 右键托盘图标，选择导出、导入或恢复历史备份。 |
 
-免安装版需要保留整个文件夹，不能只移动 EXE。GitHub 自动提供的 **Source code** 压缩包是源码，不是应用程序。
+提示词在本机保存；修改内容前自动备份，最近十份可供恢复。未保存的编辑会在关闭前提示确认。
 
-### 快速上手
+<details>
+<summary><b>更新、数据位置与常见问题</b></summary>
 
-1. 在你要输入文字的位置放置光标。
-2. 按 **Ctrl + Alt + Q** 呼出圆环。
-3. 点击所需提示词扇区，内容写入原输入框。
-4. 按 **Esc** 关闭圆环。
+- **更新**：先从托盘退出旧版。安装版使用原安装路径；免安装版解压到新的空文件夹。建议更新前导出词库。
+- **数据位置**：`%APPDATA%/prompt-halo`；自动备份位于 `library-backups` 子目录。两种分发方式共用该位置。
+- **快捷键无效**：检查是否被其他应用占用；可以从托盘打开圆环，解决冲突后重启。
+- **系统组件**：普通使用无需 Node.js、npm 或 Python；输入助手使用 Windows PowerShell 和 .NET/UIAutomation，企业电脑策略可能限制运行。
+- **启动失败**：按错误提示查看 `startup-error.txt`。反馈时提供应用版本、Windows 版本、复现步骤与错误信息，请勿公开个人词库。
 
-中心按钮分别用于**新增、编辑、外圈切换**。托盘右键提供**打开圆环、导出词库、导入词库、恢复历史备份、退出**。
-
-### 数据、更新与故障
-
-- 个人词库位于 `%APPDATA%/prompt-halo`，安装版与免安装版共用这一目录。
-- 自动备份位于其下的 `library-backups`，保留最近十份。分享导出文件前，请检查其中的提示词内容。
-- 更新前先从托盘退出旧版。免安装版解压到新的空文件夹，安装版沿用原安装路径。
-- 普通使用无需安装 Node.js、npm 或 Python。输入助手使用系统 Windows PowerShell 和 .NET/UIAutomation。
-- 快捷键被占用时，可先从托盘打开；关闭冲突程序后重启。
-- 启动失败会显示错误和 `startup-error.txt` 路径。反馈问题请附版本、Windows 版本、操作步骤和错误信息。
+</details>
 
 ## English
 
-### Features
+### Download
 
-- **Quick access** — Focus an input field, summon the ring, and click a sector to insert a prompt.
-- **In-ring editing** — Click the center pen, then select a sector to edit its prompt.
-- **Expandable library** — Add prompts and toggle the outer ring using the center controls.
-- **Local storage** — Keep prompts on your computer, with import, export, and backup recovery.
-- **Editing safeguards** — Confirm unsaved changes before closing; insertion checks the original target window and focus.
+Get the app from **[GitHub Releases](https://github.com/zhangye2315673-hub/prompt-halo/releases)** → **Assets**. No command-line setup is needed for regular use.
 
-### Download and launch
-
-Open **[GitHub Releases](https://github.com/zhangye2315673-hub/prompt-halo/releases)** and choose an attached application package:
-
-| File | How to use |
+| Package | How to use |
 | --- | --- |
-| `QEA-CueRing-…-windows-x64-setup.exe` | Install once, then launch from the desktop or Start menu. |
-| `QEA-CueRing-…-windows-x64.zip` | Extract the entire archive once and run `QEA CueRing.exe` inside. |
+| **Installer — recommended** (`windows-x64-setup.exe`) | Install once, then open CueRing from the desktop or Start menu. |
+| **ZIP** (`windows-x64.zip`) | Extract the entire archive once and run `QEA CueRing.exe`. Keep its accompanying files. |
 
-Keep the entire extracted folder together. The EXE requires its accompanying files. GitHub's automatic **Source code** archives contain the source, not a ready-to-run application.
+GitHub's **Source code** archives are for development, not ready-to-run applications.
 
-### Quick start
+### Use the ring
 
-1. Place the cursor in the input field you want to use.
-2. Press **Ctrl + Alt + Q** to open the ring.
-3. Click a prompt sector to insert its text into that field.
-4. Press **Esc** to close the ring.
+1. Focus the input field where you want to insert text.
+2. Press **Ctrl + Alt + Q** to summon the ring.
+3. Click a sector to insert its prompt. Press **Esc** to dismiss the ring.
 
-The center controls provide **Add, Edit, and Toggle outer ring**. Right-click the tray icon to **open the ring, export or import your library, restore a backup, or quit**.
+The center controls let you **add a prompt**, **select a sector to edit**, and **toggle the outer ring**. Right-click the tray icon to open CueRing, import or export your library, restore a backup, or quit.
 
-### Data, updates, and troubleshooting
+Prompts stay on your computer. Changes are backed up automatically, with the ten most recent snapshots retained. Closing an unsaved edit asks for confirmation.
 
-- Personal data lives in `%APPDATA%/prompt-halo`. Installed and ZIP versions share this directory.
-- The `library-backups` subfolder keeps the ten most recent automatic backups. Review exported prompt content before sharing it.
-- Quit the existing app before updating. Extract ZIP updates into a new empty folder; use the existing installation path for installer updates.
-- Regular use does not require Node.js, npm, or Python. The input helper uses Windows PowerShell and .NET/UIAutomation.
-- If another app occupies the shortcut, use the tray menu, resolve the conflict, and restart CueRing.
-- Startup errors show a message and the location of `startup-error.txt`. When reporting a problem, include the app version, Windows version, reproduction steps, and error message.
+<details>
+<summary><b>Updates and troubleshooting</b></summary>
 
-## 开发与构建 · Development
+- Quit the old app before updating and export your library first. Install over the existing installation, or extract a ZIP update into a new empty folder.
+- Both packages use `%APPDATA%/prompt-halo`; backups live in its `library-backups` subfolder.
+- If the shortcut is occupied, use the tray menu, resolve the conflict, and restart CueRing.
+- Node.js, npm, and Python are not required for normal use. The input helper uses Windows PowerShell and .NET/UIAutomation; organizational policies may restrict these components.
+- Startup failures show an error and the location of `startup-error.txt`. Include your app version, Windows version, steps, and error message when reporting a problem. Do not post your personal prompt library.
+
+</details>
+
+## 开发 · Development
 
 ```powershell
 npm ci
 npm run desktop
-npm run build:win
-npm run build:release
 ```
 
-- `build:win`：更新 `release/win-unpacked` 目录版。 / Builds the unpacked application directory.
-- `build:release`：生成 Windows 安装包。 / Builds the Windows installer.
-- 构建前退出应用。 / Quit the app before building.
+```powershell
+npm run build:win      # 目录版 / unpacked application
+npm run build:release  # 安装版 / Windows installer
+```
 
-### 检查 · Checks
+构建前退出应用。目录版输出至 `release/win-unpacked`。  
+Quit the app before building. The unpacked app is written to `release/win-unpacked`.
+
+<details>
+<summary><b>运行检查 · Run checks</b></summary>
 
 ```powershell
 npm run test:input-contract
@@ -116,12 +120,14 @@ node tests/library.cjs
 node tests/dirty-close.cjs
 ```
 
-自动检查用于保护输入实现、菜单生命周期和词库逻辑；目标应用中的实际输入仍需实机验证。  
+自动检查覆盖输入实现保护、菜单生命周期和词库逻辑。目标应用中的实际输入仍需实机验证。  
 Automated checks cover input implementation safeguards, menu lifecycle, and library logic. Actual insertion into target applications requires native testing.
 
-## 许可与说明 · Licensing and notes
+</details>
 
-项目尚未选定开源许可证。第三方声明见 [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt)；分发应用时保留随包提供的 Electron 与 Chromium 许可文件。  
-An open-source license has not yet been selected for this project. See [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) for third-party notices, and retain the bundled Electron and Chromium license files when redistributing the application.
+## 许可 · Licensing
+
+项目尚未选定开源许可证。第三方声明见 [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt)，分发时保留随包提供的许可文件。  
+An open-source license has not yet been selected for this project. See [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) and retain the bundled license files when redistributing the app.
 
 [版本说明 / Release notes](docs/release-0.2.0.md)
