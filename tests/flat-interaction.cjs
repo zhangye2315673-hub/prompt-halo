@@ -22,10 +22,10 @@ app.whenReady().then(async()=>{
  await move(430,300);await shot('idle');
  await move(477,219);await shot('hover');
  assert(await js("$('centerDirection').classList.contains('is-active')"),'Pointer direction must activate over inner prompt');
- assert.equal(await js("getComputedStyle(halo,'::before').opacity"),'0','No whole-ring breathing background');
+ assert.equal(await js("getComputedStyle(halo,'::before').content"),'none');
  const fill=await js("getComputedStyle(rayMenu.shadowRoot.querySelector('.ray-menu-arc[data-hovered=\"true\"]')).fill");
- assert(fill.includes('halo-jade'),'Active arc must use real SVG jade gradient');
- assert.equal(await js("rayMenu.shadowRoot.querySelectorAll('.halo-active-edge').length"),1);
+ assert.equal(fill,'rgb(79, 250, 122)','Active arc uses flat green');
+ assert.equal(await js("rayMenu.shadowRoot.querySelectorAll('.halo-active-edge').length"),0);
  const first=await js("$('centerDirection').style.getPropertyValue('--direction-angle')");
  await move(383,219);
  assert.notEqual(await js("$('centerDirection').style.getPropertyValue('--direction-angle')"),first,'Direction follows pointer');
@@ -36,9 +36,9 @@ app.whenReady().then(async()=>{
  assert.equal(inserts,1,'One click produces exactly one insertion request');
  assert(await js("rayMenu.isOpen"),'Failed insertion retains the ring');
  await js("notify('');toggleOuter()");await move(531,125);await shot('outer-hover');
- assert(await js("!!outerRayMenu.shadowRoot.querySelector('.halo-active-edge')"),'Outer ring has local active edge');
+ assert.equal(await js("outerRayMenu.shadowRoot.querySelectorAll('#halo-obsidian,#halo-jade,#halo-edge,.halo-active-edge').length"),0);
  await js("openEditor(prompts[0])");await delay(350);await shot('editor');
  assert(await js("!editor.hidden && document.activeElement.id==='titleInput'"));
  assert.equal(w.isVisible(),false,'QA must remain offscreen');
- console.log(JSON.stringify({ok:true,root,out,inserts,fill}));app.exit(0);
+ fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({ok:true,root,out,inserts,fill}));app.exit(0);
 }).catch(e=>{console.error(e);console.error('ARTIFACTS '+out);app.exit(1);});

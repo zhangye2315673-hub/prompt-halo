@@ -1,53 +1,55 @@
-# Prompt Halo
+# QEA CueRing｜词环
 
-为游戏原画工作流设计的 Windows 提示词圆环。Ctrl + Alt + Q 呼出，选词后自动恢复原输入框并写入。
+为游戏原画工作流设计的 Windows 提示词圆环。按 **Ctrl + Alt + Q** 呼出，选择提示词后写入原输入框。
 
-## 圆环内完成操作
+## 下载使用
 
-桌面程序只创建一个透明圆环窗口，不再创建三栏提示词主窗口。
+在本仓库 **Releases** 下载应用，不要把 GitHub 的 Source code ZIP 当成应用安装包。
 
-- 呼出后直接显示常用提示词短条，中间保留 14px 小圆点。
-- 点中心小圆点、周围空白、Esc，或再次按全局快捷键，关闭圆环。
-- 所有提示词和“新增提示词”短条一次显示，按紧凑的多层编排围绕中心排列；点击提示词即自动恢复原输入框并导入。
-- 分类 → 新增提示词：填写名称、正文、分类、标签和后缀。分类可直接输入新名称。
-- 提示词短条：左键自动输入，右键打开编辑器。编辑器支持收藏、复制、保存和两次确认删除。
-- 二级不显示返回或中心新增按钮；新增入口仅保留分类中的短条。搜索框支持实时筛选和回车插入首个结果。
-- 新增/编辑在同一个窗口内显示小表单。× 取消编辑；保存后回到该分类。
-- 正常状态没有底部输入目标说明、轨道线或背景遮罩；失败时显示短错误通知。
+- **安装版**：下载 `QEA-CueRing-0.2.0-beta.1-windows-x64-setup.exe`，安装一次，以后从桌面或开始菜单打开。
+- **免安装版**：下载 `QEA-CueRing-0.2.0-beta.1-windows-x64.zip`，完整解压一次，双击文件夹里的 `QEA CueRing.exe`。不要单独移动 EXE。
+- 更新前从托盘退出旧版；免安装版解压到新的空文件夹。安装版按原路径更新。不要同时运行两个版本。
 
-## 运行
+这是预发布测试版，目标为 Windows 10/11 x64；其他电脑尚未完成真实输入验收。EXE 暂未数字签名。不支持宣称 ARM、32 位和 Windows 7/8 兼容。
+
+## 操作
+
+1. 在目标输入框放置光标，按 Ctrl + Alt + Q。
+2. 点击提示词扇区调用。Esc 关闭圆环。
+3. 中心按钮用于新增、编辑和外圈开关。点击笔后再选扇区进行编辑。
+4. 托盘右键提供打开圆环、导出词库、导入词库、恢复历史备份和退出。
+
+## 数据及故障
+
+- 个人词库保留在 `%APPDATA%/prompt-halo`，不随程序包分发。自动备份在该目录的 `library-backups`，保留最近十份。
+- 安装版和免安装版使用同一个个人词库目录。卸载默认保留个人词库。
+- 快捷键占用会给出提示，可从托盘打开；关闭冲突程序后重启。
+- 正常使用无需安装 Node/npm/Python。输入助手依赖系统 Windows PowerShell、.NET/UIAutomation；企业策略限制脚本或动态编译时可能无法启动。
+- 启动失败会显示错误和 `startup-error.txt` 路径。故障反馈请提供版本、Windows 版本、操作步骤及错误信息；不要公开完整个人词库。
+- 避免向管理员权限运行的应用输入；请先在普通权限记事本或浏览器输入框验证。
+
+## 开发与构建
 
 ```powershell
 npm ci
 npm run desktop
+npm run build:win
+npm run build:release
 ```
 
-先在目标文本框放置光标再呼出。默认隐藏到系统托盘；托盘或再次启动程序都打开圆环。修改源码后需退出旧实例再启动。
-
-浏览器预览可用 `npm start`；纯网页预览不能向其他应用输入。
-
-## 数据与回退
-
-沿用原 `index.html` 的 Electron localStorage 和 `prompt-halo-prompts` 键。已有个人词库继续使用，不自动覆盖为默认示例。
-源码由 Git 管理，个人词库不随 GitHub 同步。回退与验收版本见 VERSIONING.md。
-
-2026-09-14 用户验收了两个浏览器、微信、QQ、Photoshop 文字输入和 Typora 的原输入实现。新圆环保留原生服务以及窗口恢复、焦点校验和单次粘贴函数；界面回归与输入验证的覆盖范围见 UI-CHANGELOG.md。
-
-## 验证
+`build:win` 只更新 `release/win-unpacked`。`build:release` 生成安装包。构建前退出应用。
 
 ```powershell
 npm run test:input-contract
 npm run test:menu
-npm run test:ui
-npm run test:native
-npm run test:chrome
-npm run test:chrome -- --search
+node tests/library.cjs
+node tests/dirty-close.cjs
 ```
 
-原生测试会短暂操作临时测试窗口的鼠标和键盘，不发送聊天消息；检测到用户输入或前台窗口变化时中止。
-UI 测试使用临时用户数据，不修改个人词库。界面截图输出到系统临时目录。
+隐藏渲染器检查使用独立临时词库。原生输入验收需在实际目标应用中确认文字写入，不能用 DOM 或剪贴板测试代替。
 
-## 诊断
+## 许可与发布范围
 
-托盘 → 打开输入诊断。诊断记录限本机最近 60 个链路事件，不含正文、剪贴板或聊天记录。
-`input-dispatched` 只表示 Windows 接收了模拟按键，不代表任意应用都已修改文本，需结合真实目标文本核验。
+项目尚未选定开源许可证；本次发布不擅自授予额外的代码、品牌或素材再利用权限。第三方许可见 `THIRD-PARTY-NOTICES.txt`、`LICENSE.electron.txt` 和 `LICENSES.chromium.html`，分发时保留这些文件。
+
+本次验收状态及限制见 `docs/release-0.2.0.md`。历史验收基线保留在 `baselines/`；`release/`、`node_modules/`、`_archive/` 和个人数据不提交源码仓库。

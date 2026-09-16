@@ -1,6 +1,6 @@
 {
   "name": "prompt-halo",
-  "version": "0.1.0",
+  "version": "0.2.0-beta.1",
   "private": true,
   "scripts": {
     "start": "npx serve .",
@@ -12,10 +12,14 @@
     "test:input-contract": "node tests/accepted-input-contract.cjs",
     "test:menu": "node tests/menu-lifecycle.cjs",
     "test:window-visibility": "electron tests/window-visibility.cjs",
-    "test:ring-controls": "electron tests/ring-controls.cjs",
-    "test:ui": "electron tests/renderer-menu.cjs",
+    "test:ui": "electron tests/flat-interaction.cjs",
     "desktop:dev": "electron electron/main.cjs",
-    "build:win": "electron-builder --win portable"
+    "build:win": "node scripts/build-info.cjs && electron-builder --win --dir && node scripts/build-info.cjs --verify",
+    "test:flat": "electron tests/flat-interaction.cjs",
+    "test:legacy:renderer": "electron tests/renderer-menu.cjs",
+    "test:legacy:ring-controls": "electron tests/ring-controls.cjs",
+    "test:center": "electron tests/center-controls.cjs",
+    "build:release": "node scripts/build-info.cjs && electron-builder --win nsis --x64 && node scripts/build-info.cjs --verify"
   },
   "devDependencies": {
     "electron": "^44.3.0",
@@ -26,16 +30,24 @@
   },
   "build": {
     "appId": "com.prompthalo.app",
-    "productName": "Prompt Halo",
+    "productName": "QEA CueRing",
     "asar": true,
     "files": [
-      "electron/**/*",
+      "electron/main.cjs",
+      "electron/preload.cjs",
+      "electron/windows-input.cjs",
+      "electron/windows-input.cs",
+      "electron/windows-input.ps1",
       "app.js",
       "style.css",
       "index.html",
       "ring-theme.css",
       "node_modules/ray-menu/**/*",
-      "package.json"
+      "package.json",
+      "electron/library.cjs",
+      "build-info.json",
+      "assets/cue-ring.png",
+      "assets/cue-ring.ico"
     ],
     "directories": {
       "output": "release"
@@ -43,21 +55,46 @@
     "win": {
       "target": [
         {
-          "target": "portable",
+          "target": "dir",
           "arch": [
             "x64"
           ]
         }
       ],
-      "artifactName": "Prompt-Halo-${version}-portable.exe"
+      "icon": "assets/cue-ring.ico"
     },
     "asarUnpack": [
       "electron/windows-input.ps1",
       "electron/windows-input.cs",
       "electron/windows-input.cjs"
+    ],
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "QEA CueRing",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": false,
+      "artifactName": "QEA-CueRing-${version}-windows-x64-setup.${ext}"
+    },
+    "extraFiles": [
+      {
+        "from": "README.md",
+        "to": "使用说明.md"
+      },
+      {
+        "from": "THIRD-PARTY-NOTICES.txt",
+        "to": "THIRD-PARTY-NOTICES.txt"
+      },
+      {
+        "from": "docs/release-0.2.0.md",
+        "to": "发行说明.md"
+      }
     ]
   },
   "main": "electron/main.cjs",
-  "description": "Prompt Halo desktop prompt ring",
+  "description": "QEA CueRing | 词环 — 快捷提示词圆环",
   "author": "Prompt Halo"
 }

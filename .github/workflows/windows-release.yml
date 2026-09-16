@@ -1,0 +1,60 @@
+name: Publish Windows beta
+on:
+  push:
+    tags: ['v*-beta.*']
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify tag and input protections
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag does not match package version' }
+          npm run test:input-contract
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run test:menu
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          node tests/library.cjs
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          node tests/dirty-close.cjs
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Build installer
+        run: npm run build:release
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify packaged renderer
+        shell: pwsh
+        run: |
+          $env:HALO_TEST_FILE = Join-Path $PWD 'release/win-unpacked/resources/app.asar/index.html'
+          $env:HALO_RENDER_ROOT = Join-Path $PWD 'release/win-unpacked/resources/app.asar'
+          foreach ($test in @('center-controls','flat-interaction','library-renderer')) {
+            $p = Start-Process .\node_modules\electron\dist\electron.exe -ArgumentList "tests/$test.cjs" -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput "$env:RUNNER_TEMP/$test-out.txt" -RedirectStandardError "$env:RUNNER_TEMP/$test-err.txt"
+            if ($p.ExitCode -ne 0) { Get-Content "$env:RUNNER_TEMP/$test-err.txt"; throw "${test} failed: $($p.ExitCode)" }
+          }
+      - name: Package and publish verified beta
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $base = "QEA-CueRing-$version-windows-x64"
+          Compress-Archive -Path 'release/win-unpacked/*' -DestinationPath "release/$base.zip" -CompressionLevel Optimal
+          $files = @("release/$base-setup.exe", "release/$base.zip")
+          $lines = foreach ($file in $files) { $hash = Get-FileHash -LiteralPath $file -Algorithm SHA256; "$($hash.Hash.ToLower())  $(Split-Path $file -Leaf)" }
+          $lines | Set-Content release/SHA256SUMS.txt -Encoding utf8
+          Copy-Item build-info.json release/build-info.json
+          gh release create $env:GITHUB_REF_NAME --verify-tag --draft --prerelease --title "QEA CueRing｜词环 $version" --notes-file docs/release-0.2.0.md
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          gh release upload $env:GITHUB_REF_NAME @files release/SHA256SUMS.txt release/build-info.json
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          gh release edit $env:GITHUB_REF_NAME --draft=false --prerelease
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }

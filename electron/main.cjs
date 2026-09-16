@@ -1,11 +1,41 @@
-const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, screen, Tray, Menu, nativeImage, shell } = require('electron');
+const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, screen, Tray, Menu, nativeImage, dialog } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 const inputModulePath=app.isPackaged?path.join(process.resourcesPath,'app.asar.unpacked','electron','windows-input.cjs'):path.join(__dirname,'windows-input.cjs');
 const { WindowsInput } = require(inputModulePath);
-const buildFiles = ['main.cjs','preload.cjs','windows-input.cjs','windows-input.cs','windows-input.ps1','../app.js','../style.css'];
+const buildFiles = ['main.cjs','preload.cjs','windows-input.cjs','windows-input.cs','windows-input.ps1','../app.js','../style.css','../index.html','../ring-theme.css','library.cjs'];
 const build = crypto.createHash('sha256').update(buildFiles.map(f => fs.readFileSync(path.join(__dirname,f))).join('')).digest('hex').slice(0,12);
+// Preserve the existing packaged library path across the product rename.
+if(app.isPackaged)app.setPath('userData',path.join(app.getPath('appData'),'prompt-halo'));
+const library=require('./library.cjs');
+const backupDir=path.join(app.getPath('userData'),'library-backups');
+let editorDirty=false,discardPending=null;
+let buildInfo={version:'dev',id:build,builtAt:'开发版本'};
+try{buildInfo=JSON.parse(fs.readFileSync(path.join(__dirname,'../build-info.json'),'utf8'));}catch{}
+async function confirmDiscard(){
+ if(!editorDirty)return true;
+ if(discardPending)return discardPending;
+ discardPending=dialog.showMessageBox(haloWindow,{type:'question',message:'放弃未保存的修改？',buttons:['继续编辑','放弃修改'],defaultId:0,cancelId:0}).then(r=>{if(r.response===1)editorDirty=false;return r.response===1;}).finally(()=>discardPending=null);
+ return discardPending;
+}
+async function manageLibrary(action,current){
+ const list=library.validate(current);
+ if(action==='export'){
+  const result=await dialog.showSaveDialog(haloWindow,{title:'导出词库',defaultPath:'Prompt-Halo-library.json',filters:[{name:'JSON 词库',extensions:['json']}]});
+  if(!result.canceled)fs.writeFileSync(result.filePath,JSON.stringify({format:'prompt-halo-library',version:1,prompts:list},null,2),'utf8');return {};
+ }
+ if(action!=='import'&&action!=='restore')throw Error('未知词库操作');
+ const result=await dialog.showOpenDialog(haloWindow,{title:action==='restore'?'选择历史备份':'导入词库',defaultPath:action==='restore'?backupDir:undefined,properties:['openFile'],filters:[{name:'JSON 词库',extensions:['json']}]});
+ if(result.canceled)return {};
+ if(fs.statSync(result.filePaths[0]).size>2000000)throw Error('词库文件过大');
+ const incoming=library.validate(JSON.parse(fs.readFileSync(result.filePaths[0],'utf8').replace(/^\uFEFF/,'')));
+ const preview=incoming.map(p=>p.title).join('、');
+ const pick=await dialog.showMessageBox(haloWindow,{type:'question',message:'导入 '+incoming.length+' 条提示词',detail:'当前 '+list.length+' 条。合并时相同 ID 更新、不同 ID 添加；替换会替换整个词库。操作前自动备份。\n\n'+preview,buttons:['取消','合并','替换'],defaultId:0,cancelId:0});
+ if(!pick.response)return {};
+ const next=pick.response===1?library.merge(list,incoming):incoming;
+ library.backup(backupDir,list);return {prompts:next};
+}
 const diagnosticFile = path.join(app.getPath('userData'), 'input-diagnostics.json');
 let haloWindow, tray, inputService, ready, devWatcher, devReloadTimer, devReloadCheckTimer;
 let startupReady=false;
@@ -23,26 +53,18 @@ function trace(stage, data = {}) {
 }
 function failure(reason) {
   trace('failed',{reason});
-  tray?.displayBalloon({title:'Prompt Halo 未完成输入',content:reason,iconType:'error'});
+  tray?.displayBalloon({title:'QEA CueRing｜词环 未完成输入',content:reason,iconType:'error'});
   return {ok:false,reason};
 }
 const locked = app.requestSingleInstanceLock();
 if (!locked) app.quit();
 function createTrayIcon() {
-  const size = 16;
-  const pixels = Buffer.alloc(size * size * 4, 0);
-  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) {
-    const dx = x - 7.5; const dy = y - 7.5; const d = Math.sqrt(dx * dx + dy * dy);
-    const alpha = d > 5.7 && d < 7.2 ? 255 : d < 3.1 ? 255 : 0;
-    const i = (y * size + x) * 4;
-    pixels[i] = 125; pixels[i + 1] = 226; pixels[i + 2] = 189; pixels[i + 3] = alpha;
-  }
-  return nativeImage.createFromBitmap(pixels, { width: size, height: size });
+  return nativeImage.createFromPath(path.join(__dirname,'../assets/cue-ring.png')).resize({width:16,height:16});
 }
 
 function createWindows() {
   const webPreferences = {preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,backgroundThrottling:false};
-  haloWindow = new BrowserWindow({width:860,height:600,transparent:true,frame:false,resizable:false,movable:false,alwaysOnTop:true,skipTaskbar:true,hasShadow:false,show:false,backgroundColor:'#00000000',focusable:true,webPreferences});
+  haloWindow = new BrowserWindow({title:'QEA CueRing｜词环',icon:path.join(__dirname,'../assets/cue-ring.ico'),width:860,height:600,transparent:true,frame:false,resizable:false,movable:false,alwaysOnTop:true,skipTaskbar:true,hasShadow:false,show:false,backgroundColor:'#00000000',focusable:true,webPreferences});
   haloWindow.on('close',e=>{if(!quitting){e.preventDefault();hideHalo('close');}});
   // Screenshot overlays temporarily take focus. Blur alone is not dismissal;
   // explicit close/outside-click and the accepted paste ownership checks remain.
@@ -153,6 +175,7 @@ function finishDismissal(id){
   const pending=dismissal;dismissal=null;clearTimeout(pending.timer);hideVisuals();pending.resolve();
 }
 function hideHalo(reason='cancel') {
+  if(editorDirty)return confirmDiscard().then(ok=>ok?hideHalo(reason):undefined);
   if(dismissal)return dismissal.promise;
   trace('closed',{reason});session=null;stopMonitor();globalShortcut.unregister('Escape');
   if(!haloWindow?.isVisible?.()||haloWindow?.isMinimized?.()){hideVisuals();return Promise.resolve();}
@@ -202,18 +225,23 @@ async function pasteIntoPreviousApp(text, sessionId) {
   } catch(error){return failure(error.message);} finally{hideVisuals();injecting=false;}
 }
 function createTray() {
-  tray=new Tray(createTrayIcon());tray.setToolTip('Prompt Halo · '+build);
+  tray=new Tray(createTrayIcon());tray.setToolTip('QEA CueRing｜词环');
   tray.setContextMenu(Menu.buildFromTemplate([
-    {label:'打开圆环 · 分类中可新增提示词',click:showHalo},
-    {label:'呼出 Halo',click:showHalo},
-    {label:'打开输入诊断',click:()=>shell.openPath(diagnosticFile)},
-    {label:'版本 '+build,enabled:false},
+    {label:'打开圆环 · Ctrl+Alt+Q',click:showHalo},
     {type:'separator'},
-    {label:'退出 Prompt Halo',click:()=>app.quit()}
+    {label:'导出词库',click:()=>haloWindow.webContents.send('prompt-halo:library','export')},
+    {label:'导入词库',click:()=>haloWindow.webContents.send('prompt-halo:library','import')},
+    {label:'恢复历史备份',click:()=>haloWindow.webContents.send('prompt-halo:library','restore')},
+    {type:'separator'},
+    {label:'退出 QEA CueRing｜词环',click:async()=>{if(await confirmDiscard())app.quit();}}
   ]));tray.on('click',toggleHalo);
 }
 if(locked){
   ready=app.whenReady().then(async()=>{
+    ipcMain.on('prompt-halo:dirty',(e,value)=>{if(e.sender===haloWindow?.webContents)editorDirty=value===true;});
+    ipcMain.on('prompt-halo:backup',(e,list)=>{try{if(e.sender!==haloWindow?.webContents)throw Error('无效窗口');library.backup(backupDir,list);e.returnValue={ok:true};}catch(error){e.returnValue={ok:false,reason:error.message};}});
+    ipcMain.handle('prompt-halo:discard',e=>e.sender===haloWindow?.webContents?confirmDiscard():false);
+    ipcMain.handle('prompt-halo:library-action',(e,action,list)=>{if(e.sender!==haloWindow?.webContents)throw Error('无效窗口');return manageLibrary(action,list);});
     inputService=new WindowsInput();
     ipcMain.handle('prompt-halo:insert',(e,text,id)=>e.sender===haloWindow?.webContents?pasteIntoPreviousApp(text,id):{ok:false,reason:'请从目标应用中呼出菜单'});
     ipcMain.handle('prompt-halo:toggle',toggleHalo);
@@ -226,11 +254,17 @@ if(locked){
     const shortcut=globalShortcut.register('Ctrl+Alt+Q',toggleHalo);
     startupReady=true;
     trace('ready',{shortcut,accelerator:'Ctrl+Alt+Q',helperReady:true,build});
+    if(!shortcut)dialog.showMessageBox({type:'warning',message:'Ctrl+Alt+Q 注册失败',detail:'可能被其他程序占用。可使用托盘打开圆环；关闭冲突程序后重启 QEA CueRing｜词环。'});
     if(!shortcut)failure('Ctrl + Alt + Q 被其他程序占用，可从托盘呼出。');
     // 双击 EXE 后自动展示一次圆环，给出明确的启动反馈。
     setTimeout(()=>{if(!quitting)showHalo();},420);
   });
-  ready.catch(e=>{console.error('Halo startup failed:',e.message);app.exit(1);});
+  ready.catch(e=>{
+    const report=path.join(app.getPath('userData'),'startup-error.txt');
+    try{fs.mkdirSync(path.dirname(report),{recursive:true});fs.writeFileSync(report,new Date().toISOString()+'\n'+String(e.stack||e));}catch{}
+    dialog.showErrorBox('QEA CueRing｜词环 启动失败','请确认整个程序文件夹已完整解压，Windows PowerShell 可运行。企业电脑请联系管理员检查脚本或应用限制。\n\n错误：'+e.message+'\n\n诊断文件：'+report);
+    inputService?.stop();app.exit(1);
+  });
   app.on('second-instance',()=>{showHalo();});
 }
 app.on('before-quit',()=>{quitting=true;cancelDismissal();stopMonitor();devWatcher?.close();clearTimeout(devReloadTimer);clearTimeout(devReloadCheckTimer);});

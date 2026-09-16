@@ -1,45 +1,33 @@
 :root{color-scheme:dark;--surface:#171b20;--slot-surface:#292f37;--slot-active:#405d85;--line:rgba(235,241,244,.16);--text:#f2f5f7;--muted:#a4adb6;--mint:#9fc5ff;--glass:rgba(24,29,35,.78);--glass-strong:rgba(29,35,42,.94);--accent:rgba(143,185,255,.9);font-family:"Segoe UI Variable","Segoe UI","Microsoft YaHei",sans-serif}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:transparent!important;overflow:hidden}button,input,textarea,select{font:inherit}button{color:var(--text);cursor:pointer}button:focus-visible{outline:2px solid var(--mint);outline-offset:4px}button:disabled{opacity:.35;cursor:default}button,input,textarea{ -webkit-app-region:no-drag }
 .halo{display:none;position:absolute;inset:0;--cx:430px;--cy:300px;pointer-events:none}.halo.show{display:block}.halo button,.halo input,.halo textarea,.halo select,.prompt-editor{pointer-events:auto}.root-ring{position:absolute;left:var(--cx);top:var(--cy)}
-.halo.show::before,.halo.closing::before{content:"";position:absolute;left:var(--cx);top:var(--cy);width:var(--aura-size,304px);height:var(--aura-size,304px);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,transparent 0 38%,rgba(164,210,255,.08) 46%,rgba(94,157,255,.22) 58%,rgba(111,177,255,.16) 67%,transparent 76%);box-shadow:0 0 28px rgba(75,133,230,.24),inset 0 0 18px rgba(113,178,255,.16);pointer-events:none}
-.halo.show::before{animation:halo-aura-breathe 2.4s ease-in-out infinite}
 .halo.editing::before{display:none}
 .halo.show ray-menu{filter:drop-shadow(0 12px 22px rgba(4,8,14,.42))}
 .halo.closing{display:block;pointer-events:none}
 .halo.closing *{pointer-events:none!important}
 .halo.closing ray-menu{transform-origin:var(--cx) var(--cy);animation:halo-ring-out 520ms cubic-bezier(.45,.05,.6,1) both}
 .halo.closing .center-split{animation:halo-center-out 520ms ease-in both}
-.halo.closing::before{animation:halo-aura-out 520ms ease-in-out both}
 .halo.closing .prompt-editor{animation:halo-editor-out 300ms ease-in both}
-@keyframes halo-aura-breathe{0%,100%{opacity:.35;transform:translate(-50%,-50%) scale(.92)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
-@keyframes halo-ring-out{0%{opacity:1;transform:scale(1) rotate(0)}38%{opacity:.92;transform:scale(.76) rotate(7deg)}72%{opacity:.48;transform:scale(.28) rotate(16deg)}100%{opacity:0;transform:scale(.04) rotate(24deg)}}
 @keyframes halo-center-out{0%,20%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.08)}}
-@keyframes halo-aura-out{0%{opacity:.72;transform:translate(-50%,-50%) scale(1)}28%{opacity:.95;transform:translate(-50%,-50%) scale(1.04)}72%{opacity:.48;transform:translate(-50%,-50%) scale(.42)}100%{opacity:0;transform:translate(-50%,-50%) scale(.04)}}
 @keyframes halo-editor-out{to{opacity:0;transform:translate(-50%,-50%) scale(.85)}}
 /* Keep the ring quick to use while giving its state a little presence. */
 .halo.show ray-menu{transform-origin:var(--cx) var(--cy);animation:halo-ring-in 360ms cubic-bezier(.16,1,.3,1) both}
 .halo.show .center-split{animation:halo-center-in 140ms cubic-bezier(.16,1,.3,1) both}
-.halo.show .ray-menu-arc[data-hovered="false"]{opacity:.72}
-.halo.show .ray-menu-arc[data-hovered="true"]{filter:drop-shadow(0 0 8px rgba(143,185,255,.35))}
-.selection-pulse{animation:halo-selection-pulse 260ms ease-out!important}
-@keyframes halo-ring-in{from{opacity:0;transform:scale(.58) rotate(-22deg);filter:blur(4px)}72%{opacity:1;transform:scale(1.08) rotate(4deg);filter:blur(0)}to{opacity:1;transform:scale(1) rotate(0);filter:none}}
 @keyframes halo-center-in{from{opacity:0;transform:translate(-50%,-50%) scale(.88)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-@keyframes halo-selection-pulse{0%{filter:drop-shadow(0 0 0 rgba(159,197,255,0))}35%{filter:drop-shadow(0 0 14px rgba(159,197,255,.72))}100%{filter:drop-shadow(0 0 0 rgba(159,197,255,0))}}
 @media (prefers-reduced-motion:reduce){.halo.show ray-menu,.halo.show .center-split,.selection-pulse{animation:none!important}}
 .outer-ray-menu{z-index:7!important;pointer-events:none!important;--ray-bg:rgba(29,35,42,.72);--ray-text:#e7edf2;--ray-border:transparent;--ray-accent:var(--accent);--ray-accent-text:#fff;--ray-arc-fill:var(--slot-surface);--ray-arc-fill-hover:var(--slot-active);--ray-arc-stroke:rgba(255,255,255,.13);--ray-arc-stroke-hover:rgba(143,185,255,.8);--ray-ring-stroke:rgba(255,255,255,.14)}.outer-ray-menu .ray-menu-label{display:none!important}.halo.editing .outer-ray-menu{display:none}
 ray-menu{position:absolute;inset:0;z-index:8;pointer-events:none;--ray-bg:transparent;--ray-text:#e7edf2;--ray-border:transparent;--ray-accent:var(--accent);--ray-accent-text:#fff;--ray-radius:10px;--ray-padding-x:8px;--ray-padding-y:5px;--ray-gap:5px;--ray-font-size:12px;--ray-arc-fill:var(--slot-surface);--ray-arc-fill-hover:var(--slot-active);--ray-arc-stroke:rgba(255,255,255,.14);--ray-arc-stroke-hover:rgba(143,185,255,.8);--ray-ring-stroke:rgba(255,255,255,.15);--ray-shadow:none;--ray-shadow-hover:0 8px 24px rgba(8,12,18,.28)}
-/* Center slots: radius 32 inside the 40px hole, with an 8px split. */
+/* Center geometry is defined by the three equal SVG paths in index.html. */
 .center-split{display:none;position:absolute;left:var(--cx);top:var(--cy);z-index:10;width:64px;height:64px;transform:translate(-50%,-50%);pointer-events:none}
 .halo.secondary .center-split{display:block}
 .halo.editing .center-split,.halo.editing ray-menu{display:none!important}
 .center-half{position:absolute;inset:0;width:64px;height:64px;padding:0;border:0;background:transparent;color:#e4e4e7;cursor:pointer;pointer-events:auto}
-.center-add{clip-path:path('M 23.108106 1.260218 A 32 32 0 0 0 23.108106 62.739782 Q 28 63.749016 28 58.749016 L 28 5.250984 Q 28 0.250984 23.108106 1.260218 Z')}
-.center-toggle{clip-path:path('M 40.891894 1.260218 A 32 32 0 0 1 40.891894 62.739782 Q 36 63.749016 36 58.749016 L 36 5.250984 Q 36 0.250984 40.891894 1.260218 Z')}
+
+
 .center-half > svg:not(.center-glyph){position:absolute;inset:0;width:64px;height:64px;pointer-events:none}
-.center-slot{fill:var(--slot-surface);stroke:rgba(255,255,255,.14);stroke-width:1;opacity:.16;transition:fill 150ms ease,stroke 150ms ease,opacity 150ms ease,filter 150ms ease}
+
 .center-half > .center-glyph{position:absolute;inset:auto;top:50%;width:14px;height:14px;transform:translate(-50%,-50%);fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;pointer-events:none;opacity:.12;transition:opacity 150ms ease}
-.center-add .center-glyph{left:16px}.center-toggle .center-glyph{left:48px}
-.center-half:hover .center-slot,.center-half:focus-visible .center-slot{fill:var(--slot-active);stroke:rgba(143,185,255,.8);stroke-width:1;opacity:1;filter:drop-shadow(0 2px 5px rgba(8,12,18,.28))}
+
 .center-half:hover,.center-half:focus-visible{color:#fff}
 .center-half:hover .center-glyph,.center-half:focus-visible .center-glyph{opacity:1}
 .halo:not(.show):not(.closing) ray-menu{display:none}.halo.secondary .halo-panel{display:none}
@@ -75,46 +63,26 @@ ray-menu{position:absolute;inset:0;z-index:8;pointer-events:none;--ray-bg:transp
 .prompt-editor button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 .editor-note{font-size:12px;color:#f3b7a1;line-height:1.5;margin:0 0 10px}
 .error-notice{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);max-width:420px;background:#282a37;border:0;color:#4ffa7a;padding:9px 12px;border-radius:5px;font-size:12px;font-weight:700;pointer-events:none}
-
-
-
-.slot-edit{position:absolute;z-index:11;transform:translate(-50%,-50%);width:24px;height:24px;display:grid;place-items:center;padding:4px;border:1px solid rgba(190,214,255,.45);border-radius:8px;background:rgba(29,35,42,.94);color:#dceaff;box-shadow:0 2px 6px rgba(8,12,18,.22);transition:background 120ms ease,color 120ms ease}
-.slot-edit svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}
-.slot-edit:hover,.slot-edit:focus-visible{background:var(--mint);color:#142033}
-.halo.editing .slot-edit{display:none}
 .center-status{position:absolute;left:50%;top:50%;z-index:3;width:76px;transform:translate(-50%,-50%);color:var(--text);font-size:10px;line-height:1.25;text-align:center;opacity:0;pointer-events:none;transition:opacity 120ms ease;white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .center-status.has-value{opacity:1}.halo.secondary .center-status.has-value~.center-half{opacity:.2}
 .halo.secondary .center-status{font-weight:600;text-shadow:0 1px 8px rgba(143,185,255,.5)}
 @media (prefers-reduced-motion:reduce){.halo.show::before{animation:none;opacity:.55}.halo.closing::before,.halo.closing ray-menu,.halo.closing .center-split,.halo.closing .prompt-editor{animation:none!important}}
 
-.center-direction{position:absolute;left:50%;top:50%;z-index:2;width:74px;height:74px;transform:translate(-50%,-50%);border-radius:50%;opacity:0;pointer-events:none;transition:opacity 180ms ease,transform 220ms cubic-bezier(.22,1.15,.36,1)}.center-direction::before{content:"";position:absolute;inset:4px;border-radius:50%;background:conic-gradient(from var(--direction-angle,0deg),transparent 0deg,rgba(159,197,255,.72) 18deg,transparent 46deg,transparent 360deg);mask:radial-gradient(circle,transparent 58%,#000 62%,#000 68%,transparent 73%);-webkit-mask:radial-gradient(circle,transparent 58%,#000 62%,#000 68%,transparent 73%)}.center-direction span{position:absolute;left:50%;top:6px;width:4px;height:12px;border-radius:4px;background:#c6ddff;box-shadow:0 0 10px rgba(159,197,255,.9);transform:translateX(-50%) rotate(var(--direction-angle,0deg));transform-origin:50% 31px;transition:transform 220ms cubic-bezier(.22,1.15,.36,1)}.center-direction.is-active{opacity:.9;transform:translate(-50%,-50%) scale(1.04)}.halo.closing .center-direction{opacity:0;transform:translate(-50%,-50%) scale(.3)}
-:root{--surface:#0b0d12;--slot-surface:rgba(20,24,34,.88);--slot-active:rgba(67,92,130,.94);--line:rgba(218,231,255,.2);--text:#f6f7fb;--muted:#aab4c8;--mint:#d8e7ff;--glass:rgba(13,16,24,.82);--glass-strong:rgba(17,21,30,.96);--accent:rgba(196,220,255,.98)}
-.halo.show::before,.halo.closing::before{background:radial-gradient(circle,transparent 0 38%,rgba(120,167,255,.06) 44%,rgba(164,119,255,.18) 53%,rgba(102,220,255,.12) 61%,rgba(255,146,214,.08) 68%,transparent 75%);box-shadow:0 0 34px rgba(93,143,255,.3),0 0 70px rgba(174,95,255,.16),inset 0 0 22px rgba(173,216,255,.2)}
+.center-direction{position:absolute;left:50%;top:50%;z-index:2;width:74px;height:74px;transform:translate(-50%,-50%);border-radius:50%;opacity:0;pointer-events:none;transition:opacity 180ms ease,transform 220ms cubic-bezier(.22,1.15,.36,1)}.center-direction span{position:absolute;left:50%;top:6px;width:4px;height:12px;border-radius:4px;background:#c6ddff;box-shadow:0 0 10px rgba(159,197,255,.9);transform:translateX(-50%) rotate(var(--direction-angle,0deg));transform-origin:50% 31px;transition:transform 220ms cubic-bezier(.22,1.15,.36,1)}.center-direction.is-active{opacity:.9;transform:translate(-50%,-50%) scale(1.04)}.halo.closing .center-direction{opacity:0;transform:translate(-50%,-50%) scale(.3)}
 .halo.show ray-menu,.halo.show .center-split{animation-duration:720ms}.halo.show ray-menu{animation-name:halo-ring-in-art}.halo.show .center-split{animation-name:halo-center-in-art}
-@keyframes halo-ring-in-art{0%{opacity:0;transform:scale(.52) rotate(-34deg);filter:blur(10px) saturate(.7)}55%{opacity:1;transform:scale(1.09) rotate(9deg);filter:blur(0) saturate(1.35)}78%{transform:scale(.975) rotate(-2deg)}100%{opacity:1;transform:scale(1) rotate(0);filter:saturate(1)}}
 @keyframes halo-center-in-art{0%{opacity:0;transform:translate(-50%,-50%) scale(.62) rotate(-18deg)}68%{opacity:1;transform:translate(-50%,-50%) scale(1.12) rotate(5deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}}
-.halo.closing ray-menu,.halo.closing .center-split{animation-duration:680ms}.halo.closing ray-menu{animation-name:halo-ring-out-art}.halo.closing::before{animation-duration:680ms;animation-name:halo-aura-out-art}
-@keyframes halo-ring-out-art{0%{opacity:1;transform:scale(1) rotate(0);filter:saturate(1)}28%{opacity:1;transform:scale(.98) rotate(-8deg)}68%{opacity:.42;transform:scale(.46) rotate(-24deg);filter:blur(1px) saturate(.8)}100%{opacity:0;transform:scale(.08) rotate(-38deg);filter:blur(8px)}}
-@keyframes halo-aura-out-art{0%{opacity:.8;transform:translate(-50%,-50%) scale(1)}35%{opacity:.92;transform:translate(-50%,-50%) scale(.86)}72%{opacity:.28;transform:translate(-50%,-50%) scale(.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(.18)}}
-.outer-ray-menu{--ray-bg:rgba(10,13,20,.72);--ray-text:#e9efff;--ray-arc-fill:rgba(28,34,49,.9);--ray-arc-fill-hover:linear-gradient(145deg,rgba(94,145,220,.94),rgba(121,83,183,.96));--ray-arc-stroke:rgba(190,217,255,.2);--ray-arc-stroke-hover:rgba(220,241,255,.96);--ray-ring-stroke:rgba(190,217,255,.24)}
-ray-menu{--ray-arc-fill:rgba(24,30,43,.94);--ray-arc-fill-hover:linear-gradient(145deg,rgba(80,132,207,.96),rgba(155,91,193,.96));--ray-arc-stroke:rgba(191,216,255,.23);--ray-arc-stroke-hover:rgba(229,247,255,.98)}
-.halo.show ray-menu .ray-menu-arc[data-hovered="true"]{filter:drop-shadow(0 0 9px rgba(117,206,255,.72)) drop-shadow(0 0 18px rgba(173,101,255,.38));transform:scale(1.025)}
-.center-direction::before{background:conic-gradient(from var(--direction-angle,0deg),transparent 0deg,rgba(122,221,255,.95) 14deg,rgba(188,118,255,.72) 27deg,transparent 52deg,transparent 360deg);filter:drop-shadow(0 0 7px rgba(120,203,255,.7))}
-.center-direction span{background:#e9f8ff;box-shadow:0 0 10px rgba(126,222,255,.95),0 0 18px rgba(184,120,255,.7)}
 .halo.show::before,.halo.closing::before{opacity:0!important;background:none!important;box-shadow:none!important;animation:none!important}
 /* Quiet center controls; no backing disk or idle glow. */
 .center-split{filter:none}
 .center-split::before{content:none}
-.center-slot{fill:rgba(39,29,53,.18)!important;stroke:rgba(121,242,199,.13)!important;opacity:1!important;filter:none}
+
 .center-half>.center-glyph{stroke:#d9fff1!important;opacity:.28!important;filter:none}
-.center-half:hover .center-slot,.center-half:focus-visible .center-slot{fill:rgba(42,92,79,.62)!important;stroke:rgba(121,242,199,.8)!important;filter:drop-shadow(0 0 4px rgba(121,242,199,.3))}
 .center-half:hover>.center-glyph,.center-half:focus-visible>.center-glyph{opacity:.9!important}
 .center-direction{z-index:12;width:68px;height:68px}.center-direction::before{inset:2px}
 /* Bent Photon flat trial: charcoal + signal green. */
 :root{--surface:#282a37;--slot-surface:#282a37;--slot-active:#4ffa7a;--text:#4ffa7a;--muted:#b0b3bf;--mint:#4ffa7a;--accent:#4ffa7a;--glass-strong:#282a37;--line:transparent}
 .halo.show ray-menu,.halo.closing ray-menu,.center-split,.center-slot,.center-glyph,.center-direction,.center-direction span,.center-direction::before{filter:none!important;box-shadow:none!important;text-shadow:none!important;backdrop-filter:none!important}
-.center-slot{fill:rgba(40,42,55,.18)!important;stroke:none!important}
-.center-half:hover .center-slot,.center-half:focus-visible .center-slot{fill:#4ffa7a!important;stroke:none!important;filter:none!important}
+
 .center-half>.center-glyph{stroke:#4ffa7a!important}
 .center-half:hover>.center-glyph,.center-half:focus-visible>.center-glyph{stroke:#282a37!important}
 .center-direction::before{content:none}.center-direction span{background:#4ffa7a;transform:translateX(-50%) rotate(calc(var(--direction-angle,0deg) + 90deg))}
@@ -122,22 +90,22 @@ ray-menu{--ray-arc-fill:rgba(24,30,43,.94);--ray-arc-fill-hover:linear-gradient(
 .prompt-editor{background:#282a37;border:0;box-shadow:none;backdrop-filter:none}
 .prompt-editor input[type=text],.prompt-editor textarea{background:#20222d;border:0;box-shadow:none!important;color:#f0f1f4}
 .editor-actions .primary{background:#4ffa7a;border:0;box-shadow:none;color:#282a37}
-.slot-edit{background:#282a37;border:0;box-shadow:none;color:#4ffa7a}
-.slot-edit:hover{background:#4ffa7a;color:#282a37}
 @keyframes halo-ring-in-art{from{opacity:0;transform:scale(.65) rotate(-22deg)}70%{opacity:1;transform:scale(1.035) rotate(2deg)}to{opacity:1;transform:scale(1) rotate(0)}}
 @keyframes halo-ring-out-art{from{opacity:1;transform:scale(1) rotate(0)}to{opacity:0;transform:scale(.08) rotate(-32deg)}}
 
 /* Heavier, legible center symbols while keeping the idle surfaces quiet. */
 .center-half>.center-glyph{width:18px;height:18px;stroke-width:2.6;stroke-linecap:square;stroke-linejoin:miter;opacity:.55!important}
 .center-half:hover>.center-glyph,.center-half:focus-visible>.center-glyph{opacity:1!important}
-
-/* Corner edit glyph: constant charcoal color, scale only on hover. */
-.slot-edit,.slot-edit:hover,.slot-edit:focus-visible{width:20px;height:20px;padding:0;background:transparent!important;border:0!important;border-radius:0;box-shadow:none!important;text-shadow:none!important;color:#282a37!important;opacity:1!important;transform:translate(-50%,-50%);transition:transform 140ms ease}
-.slot-edit svg{width:16px;height:16px;fill:currentColor;stroke:none;transform:none}
-.slot-edit:hover,.slot-edit:focus-visible{transform:translate(-50%,-50%) scale(1.25)}
 /* Three equal center controls. */
 .center-half>.center-glyph{left:var(--glyph-x);top:var(--glyph-y);width:14px;height:14px}
 .center-edit>.center-glyph{fill:#4ffa7a;stroke:none!important}
 .center-edit:hover>.center-glyph,.center-edit[aria-pressed="true"]>.center-glyph{fill:#282a37;opacity:1!important}
-.center-edit[aria-pressed="true"] .center-slot{fill:#4ffa7a!important}
 .halo.edit-pick ray-menu{cursor:crosshair}
+.center-slot{fill:rgba(40,42,55,.18);stroke:none;opacity:1;transition:fill 150ms ease}
+.center-half:hover .center-slot,.center-half:focus-visible .center-slot{fill:#4ffa7a}
+.halo.show ray-menu{animation:halo-ring-in-art 720ms cubic-bezier(.16,1,.3,1) both}
+.halo.closing ray-menu{animation:halo-ring-out-art 680ms cubic-bezier(.45,.05,.6,1) both}
+.halo.closing .center-split{animation-duration:680ms}
+@media(prefers-reduced-motion:reduce){.halo.show ray-menu,.halo.closing ray-menu,.halo.show .center-split,.halo.closing .center-split,.halo.closing .prompt-editor{animation:none!important}}
+
+.center-edit[aria-pressed="true"] .center-slot{fill:#4ffa7a}

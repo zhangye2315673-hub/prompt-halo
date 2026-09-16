@@ -19,3 +19,8 @@ tests/*-result.json
 Thumbs.db
 
 baselines/2026-09-14-verified-input-efe43e268ac6/accepted-session-diagnostics.json
+
+# Local cleanup archives and previous distribution snapshots
+_archive/
+
+build-info.json

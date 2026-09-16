@@ -9,22 +9,21 @@
 .ray-menu-arc[data-hovered="true"],.ray-menu-arc[data-focused="true"]{fill:#282a37;stroke:none;stroke-width:1;filter:none}
 :host([data-active="true"]) .ray-menu-arc[data-hovered="true"],.ray-menu-arc[data-focused="true"]{
  fill:#4ffa7a;stroke:none;stroke-width:1.7;
- filter:drop-shadow(0 0 5px #79f2c755) drop-shadow(0 0 10px #a677d538);
+ filter:none;
  translate:var(--sector-x) var(--sector-y);
 }
 .ray-menu-label{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:4px 8px!important;color:#4ffa7a;font-family:"Microsoft YaHei UI","Microsoft YaHei",sans-serif;font-weight:800;letter-spacing:.5px;animation:label-arrive 380ms ease var(--sector-delay) backwards;transition:translate 180ms ease,scale 110ms ease,color 140ms ease}
 .ray-menu-label[data-hovered="true"]{color:#4ffa7a;transform:translate(-50%,-50%)}
 :host([data-active="true"]) .ray-menu-label[data-hovered="true"],.ray-menu-label[data-focused="true"]{color:#282a37;translate:var(--sector-x) var(--sector-y);transform:translate(-50%,-50%) scale(1.06)}
-.ray-menu-arc[data-pressed="true"]{scale:.965;translate:0 0;fill:#3b7062!important;stroke:#d5ffed!important;filter:drop-shadow(0 0 3px #79f2c7)!important}
-.ray-menu-label[data-pressed="true"]{scale:.92;translate:0 0;color:white!important}
-.halo-active-edge{fill:none;stroke:url(#halo-edge);stroke-width:3.5;stroke-linecap:round;pointer-events:none;filter:drop-shadow(0 0 4px #79f2c7aa);transition:transform 240ms cubic-bezier(.2,.8,.2,1),opacity 140ms ease}
+.ray-menu-arc[data-pressed="true"]{scale:.965;translate:0 0;fill:#34d862!important;stroke:none!important;filter:none;translate:0 0;color:#282a37!important}
+
 .ray-menu-outer-ring,.ray-menu-inner-ring{stroke:none}
 @keyframes sector-arrive{from{opacity:0;transform:rotate(-9deg) scale(.84)}to{opacity:1;transform:rotate(0) scale(1)}}
 @keyframes label-arrive{from{opacity:0}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){.ray-menu-arc,.ray-menu-label{animation:none;transition:none}.halo-active-edge{transition:opacity 140ms}}
+@media(prefers-reduced-motion:reduce){.ray-menu-arc,.ray-menu-label{animation:none;transition:none}}
 
 /* Bent Photon palette, flat sector adaptation. No outlines or light effects. */
 .ray-menu-arc,.ray-menu-arc[data-hovered="true"],.ray-menu-arc[data-focused="true"],.ray-menu-arc[data-pressed="true"]{stroke:none!important;filter:none!important}
 .ray-menu-arc[data-pressed="true"]{fill:#34d862!important}
 .ray-menu-label[data-pressed="true"]{color:#282a37!important}
-.halo-active-edge{display:none}
+

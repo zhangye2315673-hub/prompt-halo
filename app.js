@@ -119,7 +119,7 @@ function loadPrompts(){
   catch{storageHealthy=false;notify('词库读取失败，已保留原始数据。请勿保存覆盖。');return false;}
   return true;
 }
-function persist(next=prompts){if(!storageHealthy){notify('词库读取失败，禁止覆盖原始数据。');return false;}try{localStorage.setItem(STORAGE,JSON.stringify(next));prompts=next;return true;}catch{notify('保存失败，本机存储不可用。内容仍留在编辑器中。');return false;}}
+function persist(next=prompts){if(!storageHealthy){notify('词库读取失败，禁止覆盖原始数据。');return false;}try{const changed=JSON.stringify(prompts.map(({uses,lastUsed,updated,...p})=>p))!==JSON.stringify(next.map(({uses,lastUsed,updated,...p})=>p));if(changed&&window.promptHalo?.backupLibrary){const b=window.promptHalo.backupLibrary(prompts);if(!b.ok)throw Error(b.reason);}localStorage.setItem(STORAGE,JSON.stringify(next));prompts=next;return true;}catch{notify('保存失败，本机存储不可用。内容仍留在编辑器中。');return false;}}
 function notify(text){$('haloHint').textContent=text;$('haloHint').hidden=!text;}
 function setPivot(point){
   // Fit the entire radial menu; retain the clicked center whenever space allows.
@@ -130,6 +130,7 @@ function setPivot(point){
 }
 function rootPivot(){pivot={x:innerWidth/2,y:innerHeight/2};halo.style.setProperty('--cx',pivot.x+'px');halo.style.setProperty('--cy',pivot.y+'px');}
 function openHalo(data={}){
+ markDirty(false);
  setEditPickMode(false);
  epoch++;nativeSessionId=data.sessionId??null;phase=data.phase??'ready';
  const loaded=loadPrompts();halo.inert=false;halo.className='halo show';halo.setAttribute('aria-hidden','false');editor.hidden=true;
@@ -138,6 +139,7 @@ function openHalo(data={}){
 async function closeHalo({native=true,animate=true}={}){
  setEditPickMode(false);
  if(nativeOverlay&&native)return window.promptHalo.hideOverlay();
+ if(!nativeOverlay&&!await allowDiscard())return;
  const wasVisible=halo.classList.contains('show');
  epoch++;const closeEpoch=epoch;halo.inert=true;halo.setAttribute('aria-hidden','true');notify('');
  // Keep the rendered slots alive while they collapse; only input listeners stop.
@@ -187,10 +189,6 @@ function roundMenuSlots(menu){
 let pointerPoint=null, directionAngle=0;
 function decorateRing(menu){
  const svg=menu.shadowRoot.querySelector('.ray-menu-svg');if(!svg)return;
- const ns='http://www.w3.org/2000/svg';
- const defs=document.createElementNS(ns,'defs');
- defs.innerHTML=`<linearGradient id="halo-obsidian" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#302337"/><stop offset=".52" stop-color="#1c1724"/><stop offset="1" stop-color="#100f18"/></linearGradient><radialGradient id="halo-jade" cx=".65" cy=".25" r=".95"><stop stop-color="#28534e"/><stop offset=".5" stop-color="#26353b"/><stop offset="1" stop-color="#211a2e"/></radialGradient><linearGradient id="halo-edge"><stop stop-color="#ad83db" stop-opacity=".15"/><stop offset=".45" stop-color="#ad83db"/><stop offset=".7" stop-color="#79f2c7"/><stop offset="1" stop-color="#ddfff1"/></linearGradient>`;
- svg.prepend(defs);
  const radius=Number(menu.getAttribute('radius')),count=menu.items.length;
  menu.shadowRoot.querySelectorAll('.ray-menu-arc,.ray-menu-label').forEach(el=>{
   const index=Number(el.dataset.index),angle=(-90+(index+.5)*360/count)*Math.PI/180;
@@ -198,10 +196,7 @@ function decorateRing(menu){
   el.style.setProperty('--sector-delay',index*28+'ms');
   el.style.setProperty('--sector-origin',`${radius+20}px ${radius+20}px`);
  });
- const edge=document.createElementNS(ns,'path');edge.classList.add('halo-active-edge');
- const r=radius-3,c=radius+20,a=12*Math.PI/180;
- edge.setAttribute('d',`M ${c+r*Math.cos(-a)} ${c+r*Math.sin(-a)} A ${r} ${r} 0 0 1 ${c+r*Math.cos(a)} ${c+r*Math.sin(a)}`);
- edge.style.transformOrigin=`${c}px ${c}px`;edge.style.opacity='0';svg.append(edge);
+
 }
 function neonHit(x,y){
  const distance=Math.hypot(x-pivot.x,y-pivot.y);
@@ -212,7 +207,7 @@ function neonHit(x,y){
 }
 function resetNeonFeedback(){
  pointerPoint=null;$('centerDirection').classList.remove('is-active');
- for(const menu of [rayMenu,outerRayMenu]){menu.dataset.active='false';const edge=menu.shadowRoot?.querySelector('.halo-active-edge');if(edge)edge.style.opacity='0';}
+ for(const menu of [rayMenu,outerRayMenu]){menu.dataset.active='false';}
 }
 function syncNeonFeedback(){
  if(!pointerPoint||!halo.classList.contains('show')||!editor.hidden||insertionPending)return;
@@ -220,10 +215,9 @@ function syncNeonFeedback(){
  for(const menu of [rayMenu,outerRayMenu]){
   const active=hit?.menu===menu;menu.dataset.active=String(active);
   menu.updateHoverFromPoint(active?pointerPoint.x:pivot.x,active?pointerPoint.y:pivot.y);
-  const edge=menu.shadowRoot?.querySelector('.halo-active-edge');
-  if(edge){edge.style.opacity=active?'1':'0';if(active){const target=-90+(hit.index+.5)*360/menu.items.length,old=Number(edge.dataset.angle||target);const next=old+((target-old+540)%360+360)%360-180;edge.dataset.angle=String(next);edge.style.transform=`rotate(${next}deg)`;}}
  }
  const direction=$('centerDirection');direction.classList.toggle('is-active',!!hit);
+ if(editPickMode&&hit){const p=prompts.find(p=>p.id===hit.menu.items[hit.index]?.id);notify(p?'编辑：'+p.title:'请选择已有提示词');}
  if(hit){const arc=hit.menu.shadowRoot?.querySelector(`.ray-menu-arc[data-hovered=\"true\"]`);const index=Number(arc?.dataset.index??hit.index);const target=-90+(index+.5)*360/hit.menu.items.length;directionAngle+=((target-directionAngle+540)%360+360)%360-180;direction.style.setProperty('--direction-angle',directionAngle+'deg');}
 }
 function setPressed(menu,index,value){
@@ -315,7 +309,7 @@ function syncOuterHover(e){
  outerRayMenu.updateHoverFromPoint(inOuter?e.clientX:pivot.x,inOuter?e.clientY:pivot.y);
 }
 let editPickMode=false;
-function setEditPickMode(value){editPickMode=value;$('centerEdit').setAttribute('aria-pressed',String(value));halo.classList.toggle('edit-pick',value);}
+function setEditPickMode(value){editPickMode=value;notify(value?'编辑模式：请选择提示词':'');$('centerEdit').setAttribute('aria-pressed',String(value));halo.classList.toggle('edit-pick',value);}
 function selectPrompt(p){if(editPickMode){openEditor(p);}else{injectPrompt(p);}}
 document.addEventListener('pointermove',e=>{pointerPoint={x:e.clientX,y:e.clientY};requestAnimationFrame(syncNeonFeedback);},{passive:true});
 $('centerEdit').addEventListener('click',()=>setEditPickMode(!editPickMode));
@@ -344,6 +338,9 @@ async function injectPrompt(p){
   persist(next);localStorage.setItem('prompt-halo-last',text);localStorage.setItem('prompt-halo-last-id',p.id);
  }catch(e){notify(e.message);}finally{insertionPending=false;}
 }
+let editorDirty=false;
+function markDirty(value){editorDirty=value;window.promptHalo?.setDirty?.(value);}
+async function allowDiscard(){if(!editorDirty)return true;const ok=window.promptHalo?.confirmDiscard?await window.promptHalo.confirmDiscard():window.confirm('放弃未保存的修改？');if(ok)markDirty(false);return ok;}
 async function openEditor(existing){
  if(insertionPending||!await keyboard())return;
  if(!existing&&prompts.length>=18){notify('内外圈的 18 个格位已满，请编辑或删除已有提示词。');return;}
@@ -356,10 +353,11 @@ async function openEditor(existing){
  const note=text=>{const el=$('editorNote');el.textContent=text;el.hidden=!text;};
  // Editing the two visible fields preserves existing library metadata and input behavior.
  function readModel(){return {...model,id:existing?.id||'p'+crypto.randomUUID(),title:$('titleInput').value.trim(),content:$('contentInput').value,uses:model.uses||0,updated:'刚刚'};}
- $('editorForm').onsubmit=e=>{e.preventDefault();const p=readModel();if(!p.title||!p.content.trim()){note('请填写标题和提示词描述。');return;}if((p.content+(p.appendSuffix!==false&&p.suffixes?.length?'\n\n'+p.suffixes.join(', '):'')).length>20000){note('提示词内容不能超过 20000 字符。');return;}const next=existing?prompts.map(item=>item.id===p.id?p:item):[...prompts,p];if(!persist(next))return;view={...editorReturn};renderRadial();};
- $('editorCancel').onclick=()=>{view=editorReturn;renderRadial();};
- $('deletePrompt')?.addEventListener('click',()=>{const b=$('deletePrompt');if(b.dataset.confirm!=='yes'){b.dataset.confirm='yes';b.textContent='确认删除';note('再点一次删除此提示词，或点 × 取消。');return;}if(!persist(prompts.filter(p=>p.id!==existing.id)))return;view={...editorReturn};renderRadial();});
+ $('editorForm').onsubmit=e=>{e.preventDefault();const p=readModel();if(!p.title||!p.content.trim()){note('请填写标题和提示词描述。');return;}if((p.content+(p.appendSuffix!==false&&p.suffixes?.length?'\n\n'+p.suffixes.join(', '):'')).length>20000){note('提示词内容不能超过 20000 字符。');return;}const next=existing?prompts.map(item=>item.id===p.id?p:item):[...prompts,p];if(!persist(next))return;markDirty(false);view={...editorReturn};renderRadial();notify('已保存');};
+ $('editorCancel').onclick=async()=>{if(!await allowDiscard())return;view=editorReturn;renderRadial();};
+ $('deletePrompt')?.addEventListener('click',()=>{const b=$('deletePrompt');if(b.dataset.confirm!=='yes'){b.dataset.confirm='yes';b.textContent='确认删除';note('再点一次删除此提示词，或点 × 取消。');return;}if(!persist(prompts.filter(p=>p.id!==existing.id)))return;markDirty(false);view={...editorReturn};renderRadial();});
  $('duplicatePrompt')?.addEventListener('click',()=>{if(prompts.length>=18){note('内外圈的 18 个格位已满。');return;}const p=readModel();p.slotOrder=Math.max(-1,...prompts.map(p=>p.slotOrder))+1;p.id='p'+crypto.randomUUID();p.title=(p.title||'未命名提示词')+' · 副本';p.uses=0;p.lastUsed=0;if(persist([...prompts,p]))openEditor(p);});
+ markDirty(false);const originalTitle=$('titleInput').value,originalContent=$('contentInput').value;editor.oninput=()=>markDirty($('titleInput').value!==originalTitle||$('contentInput').value!==originalContent);
  $('titleInput').focus();
 }
 document.querySelectorAll('.root-ring .halo-action').forEach(b=>b.onclick=()=>renderHaloPanel(b.dataset.action));
@@ -368,14 +366,14 @@ document.getElementById('outerToggle')?.addEventListener('click',toggleOuter);
 // The component listens on window and treats any click at the center as close.
 // Controls and editor events must finish here, before reaching those listeners.
 document.addEventListener('pointerdown',e=>{
- if(e.button!==0||!halo.classList.contains('show')||!editor.hidden||e.target.closest('.center-split,.slot-edit'))return;
+ if(e.button!==0||!halo.classList.contains('show')||!editor.hidden||e.target.closest('.center-split'))return;
  const hit=neonHit(e.clientX,e.clientY);if(hit)setPressed(hit.menu,hit.index,true);
 });
 document.addEventListener('pointerup',()=>{if(!insertionPending)clearPressed();});
 document.addEventListener('pointercancel',clearPressed);
 for(const type of ['pointerdown','pointerup','click','keydown']){
  document.addEventListener(type,e=>{
-  if(e.target.closest('.center-split,.prompt-editor,.slot-edit')){e.stopPropagation();return;}
+  if(e.target.closest('.center-split,.prompt-editor')){e.stopPropagation();return;}
   if(type==='click'&&halo.classList.contains('show')&&editor.hidden){
    const hit=neonHit(e.clientX,e.clientY);
    if(hit){e.stopPropagation();const p=prompts.find(p=>p.id===hit.menu.items[hit.index]?.id);if(p)selectPrompt(p);return;}
@@ -404,6 +402,7 @@ document.addEventListener('keydown',e=>{
  if(!nativeOverlay&&e.ctrlKey&&e.altKey&&e.code==='KeyQ'&&!e.repeat){e.preventDefault();halo.classList.contains('show')?closeHalo():openHalo();}
 });
 if(nativeOverlay){
+ window.promptHalo.onLibrary?.(async action=>{if(!await allowDiscard())return;const before=JSON.stringify(prompts);try{const result=await window.promptHalo.libraryAction(action,prompts);if(before!==JSON.stringify(prompts))throw Error('词库已改变，请重试导入');if(result?.prompts){if(persist(result.prompts)){markDirty(false);renderRadial();notify('词库已恢复／导入');}}}catch(e){notify(e.message);}});
  window.promptHalo.onOverlayShow(openHalo);
  window.promptHalo.onOverlayHide(()=>closeHalo({native:false,animate:false}));
  window.promptHalo.onOverlayDismiss?.(async data=>{await closeHalo({native:false});window.promptHalo.completeDismissal(data.id);});
