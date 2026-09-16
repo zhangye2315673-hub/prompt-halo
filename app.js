@@ -130,14 +130,16 @@ function setPivot(point){
 }
 function rootPivot(){pivot={x:innerWidth/2,y:innerHeight/2};halo.style.setProperty('--cx',pivot.x+'px');halo.style.setProperty('--cy',pivot.y+'px');}
 function openHalo(data={}){
+ setEditPickMode(false);
  epoch++;nativeSessionId=data.sessionId??null;phase=data.phase??'ready';
  const loaded=loadPrompts();halo.inert=false;halo.className='halo show';halo.setAttribute('aria-hidden','false');editor.hidden=true;
  haloPanel.classList.remove('show');haloPanel.innerHTML='';rootPivot();view={kind:'home',page:0};outerEnabled=false;const toggle=$('outerToggle');toggle?.setAttribute('aria-pressed','false');toggle?.setAttribute('aria-label','开启外圈');toggle?.classList.remove('is-on');toggle?.querySelector('.center-glyph')?.classList.add('is-off');if(loaded){notify('');renderRadial();}
 }
 async function closeHalo({native=true,animate=true}={}){
+ setEditPickMode(false);
  if(nativeOverlay&&native)return window.promptHalo.hideOverlay();
  const wasVisible=halo.classList.contains('show');
- epoch++;const closeEpoch=epoch;halo.inert=true;halo.setAttribute('aria-hidden','true');$('slotEdit').hidden=true;notify('');
+ epoch++;const closeEpoch=epoch;halo.inert=true;halo.setAttribute('aria-hidden','true');notify('');
  // Keep the rendered slots alive while they collapse; only input listeners stop.
  rayMenu?._removeGlobalListeners?.();outerRayMenu?._removeGlobalListeners?.();
  if(animate&&wasVisible){
@@ -239,11 +241,11 @@ async function animatePromptSelection(id){
  clearPressed();
 }
 function renderRadial(){
- $('slotEdit').hidden=true;
+ 
  if(rayMenu?.open){
   halo.classList.add('secondary');halo.classList.remove('editing');editor.hidden=true;haloPanel.classList.remove('show');
   const allItems=itemsForView();
-  const items=allItems.slice(0,6).map(item=>({id:item.id,type:item.type,label:item.label,icon:item.icon,onSelect:()=>{const p=prompts.find(p=>p.id===item.id);if(p)injectPrompt(p);}}));
+  const items=allItems.slice(0,6).map(item=>({id:item.id,type:item.type,label:item.label,icon:item.icon,onSelect:()=>{const p=prompts.find(p=>p.id===item.id);if(p)selectPrompt(p);}}));
   const innerRadius=Math.min(175,Math.max(115,items.length*19.2));
   halo.style.setProperty('--aura-size',2*((outerEnabled?innerRadius*2-INNER_HOLE_RADIUS+RING_GAP:innerRadius)+8)+'px');
   rayMenu.items=items;rayMenu.setAttribute('radius',String(innerRadius));rayMenu.setAttribute('inner-radius',String(INNER_HOLE_RADIUS));rayMenu.setAttribute('center-deadzone','34');
@@ -312,34 +314,11 @@ function syncOuterHover(e){
  // Use the component's own angle mapping, including the centered top segment.
  outerRayMenu.updateHoverFromPoint(inOuter?e.clientX:pivot.x,inOuter?e.clientY:pivot.y);
 }
-// Keep the edit target tied to the currently highlighted slot, including its rounded corner.
-function syncSlotEdit(){
- const button=$('slotEdit');
- const status=$('centerStatus');
- if(!halo.classList.contains('show')||halo.classList.contains('editing')||!rayMenu.isOpen){button.hidden=true;status?.classList.remove('has-value');if(status)status.textContent='';return;}
- const menu=outerEnabled&&outerRayMenu.getHoveredItem()?.type==='prompt'?outerRayMenu:rayMenu;
- const hovered=menu.getHoveredItem?.();
- if(status){const hp=hovered?.type==='prompt'&&prompts.find(p=>p.id===hovered.id);status.textContent=hp?.title||'';status.classList.toggle('has-value',!!hp);}
-
- const arc=menu.shadowRoot?.querySelector('.ray-menu-arc[data-hovered="true"]');
- const item=arc&&menu.items[Number(arc.dataset.index)];
- const prompt=item&&prompts.find(p=>p.id===item.id);
- if(!prompt){button.hidden=true;return;}
- const radius=Number(menu.getAttribute('radius')),svgCenter=radius+20;
- const step=2*Math.PI/menu.items.length,start=Number(menu.getAttribute('start-angle'))*Math.PI/180+Number(arc.dataset.index)*step,end=start+step;
- const distance=radius-17,inset=Math.asin((RING_GAP/2+14)/distance);
- const angle=Math.cos((start+end)/2)>0?end-inset:start+inset;
- const svg=arc.ownerSVGElement,point=svg.createSVGPoint();
- point.x=svgCenter+distance*Math.cos(angle);point.y=svgCenter+distance*Math.sin(angle);
- const position=point.matrixTransform(svg.getScreenCTM());
- button.style.left=position.x+'px';button.style.top=position.y+'px';
- button.dataset.promptId=prompt.id;button.setAttribute('aria-label','编辑：'+prompt.title);button.hidden=false;
-}
-$('slotEdit').addEventListener('click',()=>{const p=prompts.find(p=>p.id===$('slotEdit').dataset.promptId);if(p)openEditor(p);});
-// Component selection updates run on window; observe after those listeners finish.
-let slotEditFrame=0;
-document.addEventListener('pointermove',e=>{pointerPoint={x:e.clientX,y:e.clientY};cancelAnimationFrame(slotEditFrame);slotEditFrame=requestAnimationFrame(()=>{syncNeonFeedback();syncSlotEdit();});},{passive:true});
-rayMenu?.addEventListener('ray-close',()=>{$('slotEdit').hidden=true;});
+let editPickMode=false;
+function setEditPickMode(value){editPickMode=value;$('centerEdit').setAttribute('aria-pressed',String(value));halo.classList.toggle('edit-pick',value);}
+function selectPrompt(p){if(editPickMode){openEditor(p);}else{injectPrompt(p);}}
+document.addEventListener('pointermove',e=>{pointerPoint={x:e.clientX,y:e.clientY};requestAnimationFrame(syncNeonFeedback);},{passive:true});
+$('centerEdit').addEventListener('click',()=>setEditPickMode(!editPickMode));
 function focusSearch(){const input=$('haloSearch');if(input){input.focus();}}
 function updateSearch(query){const start=$('haloSearch')?.selectionStart??query.length,end=$('haloSearch')?.selectionEnd??start;view.query=query;view.page=0;renderRadial();focusSearch();$('haloSearch').setSelectionRange(start,end);}
 async function renderHaloPanel(action){
@@ -369,7 +348,8 @@ async function openEditor(existing){
  if(insertionPending||!await keyboard())return;
  if(!existing&&prompts.length>=18){notify('内外圈的 18 个格位已满，请编辑或删除已有提示词。');return;}
  const model=existing?{...existing}:{title:'',content:'',category:view.category||'未分类',tags:[],suffixes:[],favorite:false,appendSuffix:false,slotOrder:Math.max(-1,...prompts.map(p=>p.slotOrder))+1};
- $('slotEdit').hidden=true;
+ 
+ setEditPickMode(false);
  editorReturn={...view};resetNeonFeedback();halo.classList.add('editing');haloPanel.classList.remove('show');editor.hidden=false;notify('');
  rayMenu?._removeGlobalListeners?.();
  editor.innerHTML=`<form id="editorForm"><div class="editor-heading"><h1>${existing?'编辑提示词':'新增提示词'}</h1><button type="button" id="editorCancel" aria-label="取消编辑" title="取消编辑"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"/></svg></button></div><div class="editor-title-field"><label for="titleInput">标题</label><input type="text" id="titleInput" required maxlength="100" value="${escapeHtml(model.title)}" placeholder="例如：统一角色光影" autocomplete="off"></div><div class="editor-content-field"><label for="contentInput">提示词描述</label><textarea id="contentInput" required placeholder="写下你想要使用的提示词…" spellcheck="false">${escapeHtml(model.content)}</textarea></div><div class="editor-footer"><p id="editorNote" class="editor-note" role="status" hidden></p><div class="editor-actions"><div>${existing?'<button type="button" id="deletePrompt" class="danger">删除</button> <button type="button" id="duplicatePrompt">复制</button>':''}</div><button type="submit" id="savePromptBtn" class="primary">保存</button></div></div></form>`;
@@ -398,7 +378,7 @@ for(const type of ['pointerdown','pointerup','click','keydown']){
   if(e.target.closest('.center-split,.prompt-editor,.slot-edit')){e.stopPropagation();return;}
   if(type==='click'&&halo.classList.contains('show')&&editor.hidden){
    const hit=neonHit(e.clientX,e.clientY);
-   if(hit){e.stopPropagation();const p=prompts.find(p=>p.id===hit.menu.items[hit.index]?.id);if(p)injectPrompt(p);return;}
+   if(hit){e.stopPropagation();const p=prompts.find(p=>p.id===hit.menu.items[hit.index]?.id);if(p)selectPrompt(p);return;}
   }
   if((type==='click'||type==='pointerup')&&halo.classList.contains('show')){
    const distance=Math.hypot(e.clientX-pivot.x,e.clientY-pivot.y);
@@ -407,13 +387,13 @@ for(const type of ['pointerdown','pointerup','click','keydown']){
     if(type==='click'&&editor.hidden&&outerEnabled&&distance>=Number(outerRayMenu.getAttribute('inner-radius'))&&distance<=Number(outerRayMenu.getAttribute('radius'))){
      outerRayMenu.updateHoverFromPoint(e.clientX,e.clientY);
      const item=outerRayMenu.getHoveredItem(),p=item?.type==='prompt'&&prompts.find(p=>p.id===item.id);
-     if(p)injectPrompt(p);
+     if(p)selectPrompt(p);
     }
    }
   }
  });
 }
-rayMenu?.addEventListener('ray-select',e=>{if(e.detail?.type==='prompt'){const p=prompts.find(p=>p.id===e.detail.id);if(p)injectPrompt(p);}});
+rayMenu?.addEventListener('ray-select',e=>{if(e.detail?.type==='prompt'){const p=prompts.find(p=>p.id===e.detail.id);if(p)selectPrompt(p);}});
 document.addEventListener('pointerdown',e=>{if(halo.classList.contains('show')&&!e.target.closest('button,input,textarea,select,label,.prompt-editor,.center-split,ray-menu'))closeHalo();});
 document.addEventListener('pointermove',syncOuterHover,{passive:true});
 document.addEventListener('contextmenu',e=>e.preventDefault());
@@ -435,3 +415,6 @@ import('./node_modules/ray-menu/dist/wc/ray-menu.mjs').then(async()=>{
  })));
  if(halo.classList.contains('show'))renderRadial();
 }).catch(()=>notify('圆环样式加载失败，请重新打开应用。'));
+
+
+

@@ -11,17 +11,13 @@
     <ray-menu id="outerRayMenu" class="outer-ray-menu" variant="slice" edge-behavior="shift" radius="250" inner-radius="146" center-deadzone="34" start-angle="-90" sweep-angle="360" aria-label="外圈提示词"></ray-menu>
     <ray-menu id="rayMenu" variant="slice" edge-behavior="shift" radius="144" inner-radius="40" center-deadzone="34" start-angle="-90" sweep-angle="360" aria-label="提示词菜单"></ray-menu>
     <div class="center-split" aria-label="中心控制">
-      <button id="centerAdd" class="center-half center-add" type="button" aria-label="新增提示词" title="新增提示词">
-        <svg viewBox="0 0 64 64" aria-hidden="true"><path class="center-slot" d="M 23.108106 1.260218 A 32 32 0 0 0 23.108106 62.739782 Q 28 63.749016 28 58.749016 L 28 5.250984 Q 28 0.250984 23.108106 1.260218 Z"/></svg><svg class="center-glyph" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>
-      </button>
-      <button id="outerToggle" class="center-half center-toggle" type="button" aria-label="开启外圈" aria-pressed="false" title="外圈开关">
-        <svg viewBox="0 0 64 64" aria-hidden="true"><path class="center-slot" d="M 40.891894 1.260218 A 32 32 0 0 1 40.891894 62.739782 Q 36 63.749016 36 58.749016 L 36 5.250984 Q 36 0.250984 40.891894 1.260218 Z"/></svg><svg class="center-glyph" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5"/><circle cx="8" cy="8" r="1.2"/></svg>
-      </button>
+<button id="centerAdd" class="center-half center-add" type="button" aria-label="新增提示词" aria-pressed="false" title="新增提示词" style="clip-path:path('M29.402 30.500 L4.137 45.590 A31 31 0 0 1 29.838 1.076 Z');--glyph-x:16.412px;--glyph-y:23.000px"><svg viewBox="0 0 64 64" aria-hidden="true"><path class="center-slot" d="M29.402 30.500 L4.137 45.590 A31 31 0 0 1 29.838 1.076 Z"/></svg><svg class="center-glyph" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>
+<button id="centerEdit" class="center-half center-edit" type="button" aria-label="选择要编辑的提示词" aria-pressed="false" title="选择要编辑的提示词" style="clip-path:path('M34.598 30.500 L34.162 1.076 A31 31 0 0 1 59.863 45.590 Z');--glyph-x:47.588px;--glyph-y:23.000px"><svg viewBox="0 0 64 64" aria-hidden="true"><path class="center-slot" d="M34.598 30.500 L34.162 1.076 A31 31 0 0 1 59.863 45.590 Z"/></svg><svg class="center-glyph" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 14l1-5 8-8 4 4-8 8z"/></svg></button>
+<button id="outerToggle" class="center-half center-toggle" type="button" aria-label="外圈开关" aria-pressed="false" title="外圈开关" style="clip-path:path('M32.000 35.000 L57.700 49.335 A31 31 0 0 1 6.300 49.335 Z');--glyph-x:32.000px;--glyph-y:50.000px"><svg viewBox="0 0 64 64" aria-hidden="true"><path class="center-slot" d="M32.000 35.000 L57.700 49.335 A31 31 0 0 1 6.300 49.335 Z"/></svg><svg class="center-glyph" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5"/><circle cx="8" cy="8" r="1"/></svg></button>
       <div id="centerStatus" class="center-status" aria-live="polite"></div>
       <div id="centerDirection" class="center-direction" aria-hidden="true"><span></span></div>
     </div>
     <section id="haloPanel" class="halo-panel" aria-label="提示词菜单"></section>
-    <button id="slotEdit" class="slot-edit" type="button" aria-label="编辑提示词" title="编辑提示词" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10.5 2.5 3 3M3 10l7.8-7.8a1.4 1.4 0 0 1 2 2L5 12l-3 1z"/></svg></button>
     <section id="promptEditor" class="prompt-editor" aria-label="编辑提示词" hidden></section>
     <div id="haloHint" class="error-notice" role="status" hidden></div>
   </main>

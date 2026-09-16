@@ -74,7 +74,7 @@ ray-menu{position:absolute;inset:0;z-index:8;pointer-events:none;--ray-bg:transp
 .editor-actions .danger{color:#efaaa4}
 .prompt-editor button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 .editor-note{font-size:12px;color:#f3b7a1;line-height:1.5;margin:0 0 10px}
-.error-notice{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);max-width:420px;background:#322524;border:1px solid #77564d;color:#ffd8cb;padding:9px 12px;border-radius:7px;font-size:12px;pointer-events:none}
+.error-notice{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);max-width:420px;background:#282a37;border:0;color:#4ffa7a;padding:9px 12px;border-radius:5px;font-size:12px;font-weight:700;pointer-events:none}
 
 
 
@@ -110,3 +110,34 @@ ray-menu{--ray-arc-fill:rgba(24,30,43,.94);--ray-arc-fill-hover:linear-gradient(
 .center-half:hover .center-slot,.center-half:focus-visible .center-slot{fill:rgba(42,92,79,.62)!important;stroke:rgba(121,242,199,.8)!important;filter:drop-shadow(0 0 4px rgba(121,242,199,.3))}
 .center-half:hover>.center-glyph,.center-half:focus-visible>.center-glyph{opacity:.9!important}
 .center-direction{z-index:12;width:68px;height:68px}.center-direction::before{inset:2px}
+/* Bent Photon flat trial: charcoal + signal green. */
+:root{--surface:#282a37;--slot-surface:#282a37;--slot-active:#4ffa7a;--text:#4ffa7a;--muted:#b0b3bf;--mint:#4ffa7a;--accent:#4ffa7a;--glass-strong:#282a37;--line:transparent}
+.halo.show ray-menu,.halo.closing ray-menu,.center-split,.center-slot,.center-glyph,.center-direction,.center-direction span,.center-direction::before{filter:none!important;box-shadow:none!important;text-shadow:none!important;backdrop-filter:none!important}
+.center-slot{fill:rgba(40,42,55,.18)!important;stroke:none!important}
+.center-half:hover .center-slot,.center-half:focus-visible .center-slot{fill:#4ffa7a!important;stroke:none!important;filter:none!important}
+.center-half>.center-glyph{stroke:#4ffa7a!important}
+.center-half:hover>.center-glyph,.center-half:focus-visible>.center-glyph{stroke:#282a37!important}
+.center-direction::before{content:none}.center-direction span{background:#4ffa7a;transform:translateX(-50%) rotate(calc(var(--direction-angle,0deg) + 90deg))}
+.center-status{display:none!important}
+.prompt-editor{background:#282a37;border:0;box-shadow:none;backdrop-filter:none}
+.prompt-editor input[type=text],.prompt-editor textarea{background:#20222d;border:0;box-shadow:none!important;color:#f0f1f4}
+.editor-actions .primary{background:#4ffa7a;border:0;box-shadow:none;color:#282a37}
+.slot-edit{background:#282a37;border:0;box-shadow:none;color:#4ffa7a}
+.slot-edit:hover{background:#4ffa7a;color:#282a37}
+@keyframes halo-ring-in-art{from{opacity:0;transform:scale(.65) rotate(-22deg)}70%{opacity:1;transform:scale(1.035) rotate(2deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes halo-ring-out-art{from{opacity:1;transform:scale(1) rotate(0)}to{opacity:0;transform:scale(.08) rotate(-32deg)}}
+
+/* Heavier, legible center symbols while keeping the idle surfaces quiet. */
+.center-half>.center-glyph{width:18px;height:18px;stroke-width:2.6;stroke-linecap:square;stroke-linejoin:miter;opacity:.55!important}
+.center-half:hover>.center-glyph,.center-half:focus-visible>.center-glyph{opacity:1!important}
+
+/* Corner edit glyph: constant charcoal color, scale only on hover. */
+.slot-edit,.slot-edit:hover,.slot-edit:focus-visible{width:20px;height:20px;padding:0;background:transparent!important;border:0!important;border-radius:0;box-shadow:none!important;text-shadow:none!important;color:#282a37!important;opacity:1!important;transform:translate(-50%,-50%);transition:transform 140ms ease}
+.slot-edit svg{width:16px;height:16px;fill:currentColor;stroke:none;transform:none}
+.slot-edit:hover,.slot-edit:focus-visible{transform:translate(-50%,-50%) scale(1.25)}
+/* Three equal center controls. */
+.center-half>.center-glyph{left:var(--glyph-x);top:var(--glyph-y);width:14px;height:14px}
+.center-edit>.center-glyph{fill:#4ffa7a;stroke:none!important}
+.center-edit:hover>.center-glyph,.center-edit[aria-pressed="true"]>.center-glyph{fill:#282a37;opacity:1!important}
+.center-edit[aria-pressed="true"] .center-slot{fill:#4ffa7a!important}
+.halo.edit-pick ray-menu{cursor:crosshair}
